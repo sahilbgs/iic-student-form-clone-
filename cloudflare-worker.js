@@ -11,8 +11,7 @@
 //       Student ka URL change nahi hoga aur registration Firebase mein save ho jayegi!
 // ============================================================================
 
-// Yahan apna Netlify URL daalein:
-const NETLIFY_SITE_URL = "https://gtu-itr-registration.netlify.app";
+const NETLIFY_SITE_URL = "https://iiclone.netlify.app";
 
 export default {
   async fetch(request, env, ctx) {
