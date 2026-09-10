@@ -744,7 +744,7 @@
         <div class="progress-wrap">
           <div class="progress-text-row">
             <span style="color:var(--text-muted); font-size:11px; text-transform:uppercase; letter-spacing:0.04em;">Form Completion</span>
-            <span id="progressText" style="color:var(--primary);">0 of 62 answered (0%)</span>
+            <span id="progressText" style="color:var(--primary);">0 of 61 answered (0%)</span>
           </div>
           <div class="progress-bar-bg">
             <div class="progress-bar-fill" id="progressBarFill"></div>
@@ -2136,25 +2136,6 @@
               
             </div>
           
-            <div class="form-group" style="animation-delay: 3.1s;">
-              <label class="form-label" for="field_field_1788439249733_72">
-                uplode ptt word file that explain your idea in breaf  
-              </label>
-
-              
-                <div class="file-dropzone" id="dropzone_field_1788439249733_72" onclick="document.getElementById('field_field_1788439249733_72').click()">
-                  <input type="file" id="field_field_1788439249733_72" name="field_field_1788439249733_72" 
-                         style="display:none;" 
-                          
-                         onchange="handleFileChange(this, 'filename_field_1788439249733_72', 'dropzone_field_1788439249733_72')">
-                  <i data-lucide="upload-cloud" class="file-dropzone-icon"></i>
-                  <span style="font-weight:700; font-size:13.5px; color:var(--text-main); display:block;">Click to browse or drop file here</span>
-                  <span id="filename_field_1788439249733_72" style="font-size:12px; color:var(--text-muted); font-weight:600; display:block; margin-top:4px;">No file chosen</span>
-                  <small style="font-size:10.5px; color:#94a3b8; display:block; margin-top:4px;">Supports PDF, Word, Images, PPT, or ZIP (Max 50MB)</small>
-                </div>
-
-              
-            </div>
           
 
           <!-- Privacy Consent -->
@@ -2248,7 +2229,7 @@
     // DYNAMIC FORM PROGRESS METER
     // ══════════════════════════════════════════════════════════
     const fieldInputs = document.querySelectorAll('.form-group input, .form-group select, .form-group textarea');
-    const totalFields = 62;
+    const totalFields = 61;
 
     function updateProgress() {
       let answeredCount = 0;
