@@ -17,29 +17,27 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
-    // Sirf registration links ya poore domain ke liye failover handle karein
+    // 1. Agar worker URL (*.workers.dev) ko direct visit karein, toh turant Netlify form serve karein
+    if (url.hostname.includes('workers.dev')) {
+      return await serveStandbyForm(request, url);
+    }
+
+    // 2. Agar official domain par traffic aaye
     const isRegistrationPath = url.pathname.includes('/register') || url.pathname.includes('/posts/');
 
     try {
-      // 1. Primary server (Cloudflare Tunnel) ko request bhejte hain
+      // Primary server ko check karte hain
       const response = await fetch(request);
 
-      // Agar server 500, 502, 503, 504, 521, 522 status code de raha ho (Server Down)
+      // Agar server band ho (status 500 ya upar)
       if (!response.ok && response.status >= 500 && isRegistrationPath) {
-        console.warn(`[Failover] Server returned error ${response.status}. Serving Netlify standby form on same URL.`);
         return await serveStandbyForm(request, url);
       }
 
       return response;
 
     } catch (error) {
-      // 2. Server completely band hai / Cloudflare Tunnel disconnected hai
-      if (isRegistrationPath) {
-        console.warn('[Failover] Primary server unreachable. Serving Netlify standby form on same URL.');
-        return await serveStandbyForm(request, url);
-      }
-      
-      // Agar registration ke alawa koi aur page ho, toh bhi friendly message ya standby page
+      // Agar server unreachable ho
       return await serveStandbyForm(request, url);
     }
   }
