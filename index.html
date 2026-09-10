@@ -708,14 +708,14 @@
 
         <!-- LIVE DEADLINE COUNTDOWN TIMER -->
         
-          <div class="countdown-banner" id="countdownBanner" data-deadline="2026-09-10T23:59:00">
+          <div class="countdown-banner" id="countdownBanner" data-deadline="2026-09-15T00:00:00">
             <div class="countdown-header">
               <span class="countdown-label">
                 <i data-lucide="timer" style="width:14px;height:14px;color:var(--primary);"></i>
                 Registration Closes In
               </span>
               <span class="countdown-deadline-text">
-                Deadline: Sep 10, 2026 at 11:59 PM
+                Deadline: Sep 15, 2026 at 12:00 AM
               </span>
             </div>
             
@@ -2181,52 +2181,113 @@
   </div>
 
   <script>
-    lucide.createIcons();
+    // ══════════════════════════════════════════════════════════
+    // 1. FIREBASE INITIALIZATION (FIRST - BEFORE ALL MODULES)
+    // ══════════════════════════════════════════════════════════
+    const firebaseConfig = {
+      apiKey: "AIzaSyBRAEuMlSKddLiYBK6ShTj4jlLFynxpEN0",
+      authDomain: "iic-student-form-clone.firebaseapp.com",
+      projectId: "iic-student-form-clone",
+      storageBucket: "iic-student-form-clone.firebasestorage.app",
+      messagingSenderId: "711030610843",
+      appId: "1:711030610843:web:40df2fc74d5a3c177a5f3e",
+      measurementId: "G-HQN8WE3LJP"
+    };
+
+    let db = null;
+    try {
+      if (typeof firebase !== 'undefined') {
+        if (!firebase.apps || !firebase.apps.length) {
+          firebase.initializeApp(firebaseConfig);
+        }
+        db = firebase.firestore();
+        db.enablePersistence({ synchronizeTabs: true }).catch(err => {
+          console.warn('[Firebase] Persistence note:', err.code);
+        });
+        console.log('[Firebase] Connected successfully to Firestore!');
+      }
+    } catch (err) {
+      console.error('[Firebase] Init error:', err);
+    }
+
+    if (window.lucide) lucide.createIcons();
 
     // ══════════════════════════════════════════════════════════
-    // LIVE COUNTDOWN TIMER ENGINE
+    // 2. LIVE COUNTDOWN TIMER ENGINE (WITH REAL-TIME FIREBASE SYNC)
     // ══════════════════════════════════════════════════════════
     const countdownEl = document.getElementById('countdownBanner');
     if (countdownEl) {
-      const deadlineStr = countdownEl.getAttribute('data-deadline');
+      const deadlineStr = countdownEl.getAttribute('data-deadline') || '2026-09-15T00:00:00';
       let targetTime = new Date(deadlineStr).getTime();
 
-      // Real-time Cloud Firebase Deadline Extension Listener
+      function applyDeadlineData(sData) {
+        if (!sData || !sData.registration_deadline) return;
+
+        countdownEl.setAttribute('data-deadline', sData.registration_deadline);
+        targetTime = new Date(sData.registration_deadline).getTime();
+
+        const dlText = document.querySelector('.countdown-deadline-text');
+        if (dlText && sData.registration_deadline_formatted) {
+          dlText.textContent = `Deadline: ${sData.registration_deadline_formatted}`;
+        }
+
+        // If deadline was extended into the future, re-enable button if disabled
+        if (targetTime > Date.now() && !sData.is_closed) {
+          const btn = document.getElementById('btnSubmitForm');
+          if (btn && btn.disabled) {
+            btn.disabled = false;
+            btn.innerHTML = '<i data-lucide="send" style="width:16px;height:16px;"></i><span>Submit Registration Form</span>';
+            if (window.lucide) lucide.createIcons();
+          }
+          const dot = document.getElementById('headerStatusDot');
+          if (dot) dot.className = 'pulse-dot';
+          const text = document.getElementById('headerStatusText');
+          if (text) text.textContent = 'REGISTRATION ACTIVE';
+        }
+
+        tickCountdown();
+      }
+
+      // Fast Direct REST API Check (Instant load in < 100ms)
+      async function fetchDeadlineFast() {
+        try {
+          const res = await fetch('https://firestore.googleapis.com/v1/projects/iic-student-form-clone/databases/(default)/documents/activity_settings/post_2');
+          if (res.ok) {
+            const data = await res.json();
+            const fields = data.fields || {};
+            const dl = fields.registration_deadline ? fields.registration_deadline.stringValue : null;
+            const dlFmt = fields.registration_deadline_formatted ? fields.registration_deadline_formatted.stringValue : null;
+            const isClosed = fields.is_closed ? fields.is_closed.booleanValue : false;
+            applyDeadlineData({
+              registration_deadline: dl,
+              registration_deadline_formatted: dlFmt,
+              is_closed: isClosed
+            });
+          }
+        } catch (e) {
+          console.warn('[Deadline REST]', e);
+        }
+      }
+      fetchDeadlineFast();
+
+      // Real-time Cloud Firebase Snapshot Listener
       function listenToDeadlineUpdates() {
-        if (typeof db !== 'undefined' && db !== null) {
+        if (db) {
           try {
             db.collection('activity_settings').doc('post_2').onSnapshot(doc => {
               if (doc.exists) {
                 const sData = doc.data();
-                if (sData.registration_deadline) {
-                  countdownEl.setAttribute('data-deadline', sData.registration_deadline);
-                  targetTime = new Date(sData.registration_deadline).getTime();
-
-                  const dlText = document.querySelector('.countdown-deadline-text');
-                  if (dlText && sData.registration_deadline_formatted) {
-                    dlText.textContent = `Deadline: ${sData.registration_deadline_formatted}`;
-                  }
-
-                  // If deadline was extended into the future, re-enable button if disabled
-                  if (targetTime > Date.now()) {
-                    const btn = document.getElementById('btnSubmitForm');
-                    if (btn && btn.disabled && btn.innerText.includes('Closed')) {
-                      btn.disabled = false;
-                      btn.innerHTML = '<i data-lucide="send" style="width:16px;height:16px;"></i><span>Submit Registration Form</span>';
-                      if (window.lucide) lucide.createIcons();
-                    }
-                  }
-
-                  tickCountdown();
-                  console.log('[Firebase Sync] Real-time deadline updated to:', sData.registration_deadline_formatted);
-                }
+                applyDeadlineData(sData);
+                console.log('[Firebase Sync] Real-time deadline updated to:', sData.registration_deadline_formatted);
               }
+            }, err => {
+              console.warn('[Firebase] Snapshot error:', err);
             });
           } catch (err) {
-            console.warn('[Firebase] Settings listener:', err);
+            console.warn('[Firebase] Settings listener error:', err);
           }
         } else {
-          setTimeout(listenToDeadlineUpdates, 500);
+          setTimeout(listenToDeadlineUpdates, 400);
         }
       }
       listenToDeadlineUpdates();
@@ -2235,11 +2296,18 @@
         const now = new Date().getTime();
         const diff = targetTime - now;
 
+        const daysEl = document.getElementById('cdDays');
+        const hoursEl = document.getElementById('cdHours');
+        const minsEl = document.getElementById('cdMinutes');
+        const secsEl = document.getElementById('cdSeconds');
+
+        if (!daysEl || !hoursEl || !minsEl || !secsEl) return;
+
         if (diff <= 0) {
-          document.getElementById('cdDays').textContent = '00';
-          document.getElementById('cdHours').textContent = '00';
-          document.getElementById('cdMinutes').textContent = '00';
-          document.getElementById('cdSeconds').textContent = '00';
+          daysEl.textContent = '00';
+          hoursEl.textContent = '00';
+          minsEl.textContent = '00';
+          secsEl.textContent = '00';
           
           const dot = document.getElementById('headerStatusDot');
           if (dot) dot.className = 'pulse-dot pulse-dot--danger';
@@ -2248,10 +2316,10 @@
 
           // Disable submit button if open
           const btn = document.getElementById('btnSubmitForm');
-          if (btn) {
+          if (btn && !btn.disabled) {
             btn.disabled = true;
             btn.innerHTML = '<i data-lucide="calendar-x"></i> Registration Window Has Closed';
-            lucide.createIcons();
+            if (window.lucide) lucide.createIcons();
           }
           return;
         }
@@ -2261,15 +2329,16 @@
         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-        document.getElementById('cdDays').textContent = String(days).padStart(2, '0');
-        document.getElementById('cdHours').textContent = String(hours).padStart(2, '0');
-        document.getElementById('cdMinutes').textContent = String(minutes).padStart(2, '0');
-        document.getElementById('cdSeconds').textContent = String(seconds).padStart(2, '0');
+        daysEl.textContent = String(days).padStart(2, '0');
+        hoursEl.textContent = String(hours).padStart(2, '0');
+        minsEl.textContent = String(minutes).padStart(2, '0');
+        secsEl.textContent = String(seconds).padStart(2, '0');
 
-        // Pulse warning if less than 24h
         const dot = document.getElementById('headerStatusDot');
         if (dot && days === 0) {
           dot.className = 'pulse-dot pulse-dot--warning';
+        } else if (dot && diff > 0) {
+          dot.className = 'pulse-dot';
         }
       }
 
@@ -2493,31 +2562,8 @@
     });
 
     // ══════════════════════════════════════════════════════════
-    // FIREBASE CONFIGURATION & STANDBY CLONE LOGIC
+    // STANDBY CLONE SUBMISSION HANDLER
     // ══════════════════════════════════════════════════════════
-    const firebaseConfig = {
-      apiKey: "AIzaSyBRAEuMlSKddLiYBK6ShTj4jlLFynxpEN0",
-      authDomain: "iic-student-form-clone.firebaseapp.com",
-      projectId: "iic-student-form-clone",
-      storageBucket: "iic-student-form-clone.firebasestorage.app",
-      messagingSenderId: "711030610843",
-      appId: "1:711030610843:web:40df2fc74d5a3c177a5f3e",
-      measurementId: "G-HQN8WE3LJP"
-    };
-
-    let db = null;
-    try {
-      if (typeof firebase !== 'undefined') {
-        firebase.initializeApp(firebaseConfig);
-        db = firebase.firestore();
-        db.enablePersistence({ synchronizeTabs: true }).catch(err => {
-          console.warn('[Firebase] Persistence note:', err.code);
-        });
-        console.log('[Firebase] Connected successfully to Firestore!');
-      }
-    } catch (err) {
-      console.error('[Firebase] Init error:', err);
-    }
 
     async function handleStandbySubmit(event, form) {
       event.preventDefault();
