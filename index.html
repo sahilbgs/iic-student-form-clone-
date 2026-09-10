@@ -2189,7 +2189,47 @@
     const countdownEl = document.getElementById('countdownBanner');
     if (countdownEl) {
       const deadlineStr = countdownEl.getAttribute('data-deadline');
-      const targetTime = new Date(deadlineStr).getTime();
+      let targetTime = new Date(deadlineStr).getTime();
+
+      // Real-time Cloud Firebase Deadline Extension Listener
+      function listenToDeadlineUpdates() {
+        if (typeof db !== 'undefined' && db !== null) {
+          try {
+            db.collection('activity_settings').doc('post_2').onSnapshot(doc => {
+              if (doc.exists) {
+                const sData = doc.data();
+                if (sData.registration_deadline) {
+                  countdownEl.setAttribute('data-deadline', sData.registration_deadline);
+                  targetTime = new Date(sData.registration_deadline).getTime();
+
+                  const dlText = document.querySelector('.countdown-deadline-text');
+                  if (dlText && sData.registration_deadline_formatted) {
+                    dlText.textContent = `Deadline: ${sData.registration_deadline_formatted}`;
+                  }
+
+                  // If deadline was extended into the future, re-enable button if disabled
+                  if (targetTime > Date.now()) {
+                    const btn = document.getElementById('btnSubmitForm');
+                    if (btn && btn.disabled && btn.innerText.includes('Closed')) {
+                      btn.disabled = false;
+                      btn.innerHTML = '<i data-lucide="send" style="width:16px;height:16px;"></i><span>Submit Registration Form</span>';
+                      if (window.lucide) lucide.createIcons();
+                    }
+                  }
+
+                  tickCountdown();
+                  console.log('[Firebase Sync] Real-time deadline updated to:', sData.registration_deadline_formatted);
+                }
+              }
+            });
+          } catch (err) {
+            console.warn('[Firebase] Settings listener:', err);
+          }
+        } else {
+          setTimeout(listenToDeadlineUpdates, 500);
+        }
+      }
+      listenToDeadlineUpdates();
 
       function tickCountdown() {
         const now = new Date().getTime();
