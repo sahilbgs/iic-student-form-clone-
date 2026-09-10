@@ -23,13 +23,15 @@ export default {
     }
 
     // 2. Agar official domain par traffic aaye
-    const isRegistrationPath = url.pathname.includes('/register') || url.pathname.includes('/posts/');
+    // Sirf student registration path (e.g. /posts/2/register ya /register) par fallback chalega,
+    // registration reports ya admin dashboard par nahi!
+    const isRegistrationPath = url.pathname.includes('/register');
 
     try {
       // Primary server ko check karte hain
       const response = await fetch(request);
 
-      // Agar server band ho (status 500 ya upar)
+      // Agar server error de (status 500 ya upar) aur page student registration form ka ho
       if (!response.ok && response.status >= 500 && isRegistrationPath) {
         return await serveStandbyForm(request, url);
       }
@@ -37,8 +39,14 @@ export default {
       return response;
 
     } catch (error) {
-      // Agar server unreachable ho
-      return await serveStandbyForm(request, url);
+      // Agar server unreachable ho aur student registration form ka link ho
+      if (isRegistrationPath) {
+        return await serveStandbyForm(request, url);
+      }
+      return new Response('Primary server is currently unreachable. Please try again shortly.', {
+        status: 502,
+        headers: { 'content-type': 'text/plain; charset=UTF-8' }
+      });
     }
   }
 };
