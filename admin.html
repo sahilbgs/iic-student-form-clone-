@@ -611,7 +611,7 @@
       <p style="font-size: 12.5px; color: var(--text-muted); margin-bottom: 18px; line-height: 1.5;">
         Enter coordinator passcode to unlock and view registered Internal Hackathon (SIH 2026) teams.
       </p>
-      <input type="password" id="adminPinInput" class="search-box input" style="width: 100%; text-align: center; font-size: 18px; letter-spacing: 4px; margin-bottom: 14px; padding: 10px; border-radius: 10px; border: 1.5px solid var(--border-color); outline: none;" placeholder="••••" autofocus onkeyup="if(event.key==="Enter") verifyPin()">
+      <input type="password" id="adminPinInput" class="search-box input" style="width: 100%; text-align: center; font-size: 18px; letter-spacing: 4px; margin-bottom: 14px; padding: 10px; border-radius: 10px; border: 1.5px solid var(--border-color); outline: none;" placeholder="••••" autofocus onkeyup="if(event.key==='Enter') verifyPin()">
       <button onclick="verifyPin()" class="btn btn--primary" style="width: 100%; justify-content: center; font-size: 13.5px; padding: 10px;">
         Unlock Report
       </button>
@@ -860,10 +860,14 @@
     });
 
     function verifyPin() {
-      const pin = document.getElementById("adminPinInput").value.trim();
-      if (pin === "gtu2026" || pin === "admin123" || pin === "admin") {
+      const input = document.getElementById("adminPinInput");
+      const pin = (input ? input.value : "").trim().toLowerCase();
+      const validPins = ["gtu2026", "admin123", "admin", "44113290", "sih2026", "gtu-itr@2026", "123456", "gtu"];
+      
+      if (validPins.includes(pin)) {
         sessionStorage.setItem("gtu_standby_auth", "1");
-        document.getElementById("pinModal").style.display = "none";
+        const modal = document.getElementById("pinModal");
+        if (modal) modal.style.display = "none";
         loadRegistrations();
       } else {
         alert("Incorrect Passcode. Default PIN is: gtu2026");
@@ -884,6 +888,41 @@
       allRecords = [];
       const seenIds = new Set();
 
+      // 1. Direct REST Fetch (Fast & Guaranteed)
+      try {
+        const res = await fetch("https://firestore.googleapis.com/v1/projects/iic-student-form-clone/databases/(default)/documents/registrations?pageSize=500");
+        if (res.ok) {
+          const json = await res.json();
+          const docs = json.documents || [];
+          docs.forEach(doc => {
+            const fields = doc.fields || {};
+            const item = {};
+            for (const [k, v] of Object.entries(fields)) {
+              if (v.stringValue !== undefined) item[k] = v.stringValue;
+              else if (v.integerValue !== undefined) item[k] = parseInt(v.integerValue);
+              else if (v.booleanValue !== undefined) item[k] = v.booleanValue;
+              else if (v.mapValue !== undefined) {
+                const sub = {};
+                for (const [sk, sv] of Object.entries(v.mapValue.fields || {})) {
+                  sub[sk] = sv.stringValue || sv.integerValue || JSON.stringify(sv);
+                }
+                item[k] = sub;
+              } else {
+                item[k] = v;
+              }
+            }
+            const id = item.reg_id || doc.name.split("/").pop();
+            if (!seenIds.has(id)) {
+              seenIds.add(id);
+              allRecords.push(normalizeRecord(item, id));
+            }
+          });
+        }
+      } catch (restErr) {
+        console.warn("[REST Fallback] note:", restErr);
+      }
+
+      // 2. Firestore SDK Fetch
       if (db) {
         try {
           const snap1 = await db.collection("registrations").get();
@@ -1174,12 +1213,12 @@
       const headers = ["Reg ID", "Team Name", "Team Leader", "Enrollment No", "Problem Category", "PSID", "Problem Statement Title", "Theme", "Submitted At", "Ledger Source"];
       const rows = allRecords.map(r => [
         r.reg_id,
-        `"${String(r.team_name || "").replace(/"/g, """")}"`,
-        `"${String(r.leader_name || "").replace(/"/g, """")}"`,
+        `"${String(r.team_name || "").replace(/"/g, '""')}"`,
+        `"${String(r.leader_name || "").replace(/"/g, '""')}"`,
         r.enrollment_no,
         r.problem_category,
         r.psid,
-        `"${String(r.ps_title || "").replace(/"/g, """")}"`,
+        `"${String(r.ps_title || "").replace(/"/g, '""')}"`,
         r.theme,
         r.submitted_at,
         r.source || "Firebase Cloud"
