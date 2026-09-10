@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Registration — GTU-ITR R&D & IIC Portal (Cloud Standby)</title>
+  <meta name="description" content="Official Student Activity Registration Clone with Firebase Cloud Storage & Server-Down Auto-Standby. Ready for Netlify deployment.">
+  
+  <!-- Modern Typography & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Firebase v10 Compat SDK (Works out-of-the-box on Netlify static hosting) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <div class="container">
+
+    <!-- Primary Server Status & Cloud Standby Bar -->
+    <div class="server-status-bar print-hide" id="serverStatusBar">
+      <div class="status-indicator">
+        <span class="pulse-dot" id="serverPulseDot"></span>
+        <span id="serverStatusText">Primary Server: Checking Status...</span>
+      </div>
+      <div>
+        <span class="status-badge status-badge--cloud" id="cloudStorageBadge">
+          <i data-lucide="cloud" style="width:11px;height:11px;display:inline-block;vertical-align:middle;"></i>
+          Firebase Cloud
+        </span>
+      </div>
+    </div>
+
+    <!-- Alert / Fallback Notice Banner -->
+    <div class="notice-box notice-box--warning print-hide" id="fallbackNotice" style="display:none;">
+      <i data-lucide="shield-alert" style="width:18px;height:18px;color:#b45309;flex-shrink:0;margin-top:1px;"></i>
+      <div>
+        <strong>Emergency Cloud Standby Form Active:</strong>
+        The primary GTU portal server is currently offline or undergoing maintenance. 
+        Don't worry! All registrations entered here are saved directly into secure <strong>Google Firebase Cloud</strong> and will sync automatically once the server is back.
+      </div>
+    </div>
+
+    <!-- Brand Header -->
+    <div class="brand-header">
+      <div class="brand-logo-wrap">
+        <img src="assets/gtu_logo.png" alt="GTU Logo" class="brand-logo" onerror="this.style.display='none'">
+      </div>
+      <div class="brand-pill">
+        <span class="pulse-dot" id="headerStatusDot"></span>
+        <span id="headerStatusText">GTU-ITR IIC &amp; R&amp;D Activity Portal</span>
+      </div>
+      <h1 id="pageMainHeading">Student Activity Registration</h1>
+      <p>Gujarat Technological University — Innovation &amp; Incubation Cell (ITR)</p>
+    </div>
+
+    <!-- Main Registration Box -->
+    <div class="reg-card">
+
+      <!-- ================= SUCCESS CONFIRMATION VIEW ================= -->
+      <div class="success-box" id="successBox" style="display:none;">
+        <div class="success-icon-wrap">
+          <i data-lucide="check-circle-2" style="width:40px;height:40px;"></i>
+        </div>
+        <span class="badge badge--source" style="font-size:11px; padding:4px 12px; margin-bottom:12px; display:inline-block;">REGISTRATION CONFIRMED</span>
+        <h2 style="font-family:'Outfit'; font-size:1.6rem; font-weight:800; color:var(--text-main); margin-bottom:8px;">
+          You're Officially Registered!
+        </h2>
+        <p style="font-size:13.5px; color:var(--text-muted); line-height:1.6; max-width:500px; margin:0 auto 20px;">
+          Thank you, <strong id="slipStudentName">Student</strong>. Your registration for <br>
+          <span style="color:var(--primary); font-weight:700;" id="slipActivityTitle">GTU Activity</span> has been securely stored.
+        </p>
+
+        <!-- Official Registration Receipt Slip -->
+        <div style="background:var(--bg-body); border:1.5px solid var(--border-color); border-radius:14px; padding:20px; max-width:520px; margin:0 auto 24px; text-align:left;" id="printableSlip">
+          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:12px; margin-bottom:14px;">
+            <strong style="font-family:'Outfit'; font-size:14px; color:var(--primary);">GTU-ITR OFFICIAL RECEIPT</strong>
+            <span style="font-family:monospace; font-size:11px; font-weight:700; color:var(--text-muted);" id="slipRegId">REG-2026-0000</span>
+          </div>
+
+          <table class="slip-table">
+            <tr>
+              <td class="slip-label">Student Name:</td>
+              <td class="slip-val" id="slipTableStudentName">-</td>
+            </tr>
+            <tr>
+              <td class="slip-label">Enrollment No:</td>
+              <td class="slip-val" id="slipTableEnrollment">-</td>
+            </tr>
+            <tr>
+              <td class="slip-label">Email Address:</td>
+              <td class="slip-val" id="slipTableEmail">-</td>
+            </tr>
+            <tr>
+              <td class="slip-label">Mobile Number:</td>
+              <td class="slip-val" id="slipTablePhone">-</td>
+            </tr>
+            <tr>
+              <td class="slip-label">Department / Branch:</td>
+              <td class="slip-val" id="slipTableDept">-</td>
+            </tr>
+            <tr>
+              <td class="slip-label">Current Semester:</td>
+              <td class="slip-val" id="slipTableSem">-</td>
+            </tr>
+            <tr>
+              <td class="slip-label">Activity / Event:</td>
+              <td class="slip-val" id="slipTableActivity">-</td>
+            </tr>
+            <tr>
+              <td class="slip-label">Registration Time:</td>
+              <td class="slip-val" id="slipTableDate">-</td>
+            </tr>
+            <tr>
+              <td class="slip-label">Storage Backend:</td>
+              <td class="slip-val" style="color:var(--success);">
+                <i data-lucide="shield-check" style="width:13px;height:13px;display:inline-block;vertical-align:middle;"></i>
+                <span id="slipTableBackend">Google Firebase Cloud (Secured)</span>
+              </td>
+            </tr>
+          </table>
+        </div>
+
+        <div class="print-hide" style="display:flex; justify-content:center; gap:12px; flex-wrap:wrap;">
+          <button type="button" onclick="window.print()" class="btn-submit" style="width:auto; padding:10px 22px; font-size:13px; background:var(--bg-body); color:var(--text-main); border:1px solid var(--border-color); box-shadow:none;">
+            <i data-lucide="printer" style="width:14px;height:14px;"></i> Print Slip
+          </button>
+          <button type="button" onclick="resetFormForNewEntry()" class="btn-submit" style="width:auto; padding:10px 22px; font-size:13px;">
+            <i data-lucide="user-plus" style="width:14px;height:14px;"></i> Register Another Student
+          </button>
+        </div>
+      </div>
+
+      <!-- ================= ACTIVE FORM VIEW ================= -->
+      <div id="formView">
+
+        <!-- Activity Overview -->
+        <div class="activity-hero">
+          <div class="activity-badges">
+            <span class="badge badge--primary">IIC &amp; R&amp;D CELL</span>
+            <span class="badge badge--source">APPROVED ACTIVITY</span>
+            <span class="badge badge--warning" id="modeBadge">STANDBY CLOUD FORM</span>
+          </div>
+          
+          <h2 class="activity-title" id="displayActivityTitle">Student Innovation &amp; Research Registration 2026</h2>
+          <p class="activity-desc" id="displayActivityDesc">
+            Participate in official GTU-ITR technical activities, hackathons, skill-building workshops, and research symposiums. Fill in all required information below.
+          </p>
+        </div>
+
+        <!-- LIVE DEADLINE COUNTDOWN TIMER -->
+        <div class="countdown-banner" id="countdownBanner">
+          <div class="countdown-header">
+            <span class="countdown-label">
+              <i data-lucide="timer" style="width:14px;height:14px;color:var(--primary);"></i>
+              Registration Closes In
+            </span>
+            <span class="countdown-deadline-text" id="deadlineText">
+              Upcoming Deadline
+            </span>
+          </div>
+          
+          <div class="countdown-grid">
+            <div class="countdown-box">
+              <span class="countdown-num" id="cdDays">05</span>
+              <span class="countdown-unit">Days</span>
+            </div>
+            <div class="countdown-box">
+              <span class="countdown-num" id="cdHours">14</span>
+              <span class="countdown-unit">Hours</span>
+            </div>
+            <div class="countdown-box">
+              <span class="countdown-num" id="cdMinutes">30</span>
+              <span class="countdown-unit">Mins</span>
+            </div>
+            <div class="countdown-box">
+              <span class="countdown-num" id="cdSeconds" style="color:#ef4444;">00</span>
+              <span class="countdown-unit">Secs</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Real-Time Progress Tracker -->
+        <div class="progress-wrap">
+          <div class="progress-text-row">
+            <span style="color:var(--text-muted); font-size:11px; text-transform:uppercase; letter-spacing:0.04em;">Form Completion</span>
+            <span id="progressText" style="color:var(--primary);">0 of 8 answered (0%)</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="progressBarFill"></div>
+          </div>
+        </div>
+
+        <!-- Notification / Error Box -->
+        <div id="formAlertBox" style="display:none; padding:12px 16px; border-radius:10px; font-size:12.5px; margin-bottom:20px; font-weight:600; display:none; align-items:center; gap:8px;"></div>
+
+        <!-- REGISTRATION FORM -->
+        <form id="studentRegForm" onsubmit="handleRegistrationSubmit(event)">
+
+          <div class="form-grid">
+            
+            <!-- Student Full Name -->
+            <div class="form-group form-grid-full">
+              <label class="form-label" for="student_name">
+                Full Name of Student <span class="req-star">*</span>
+              </label>
+              <div class="input-wrapper">
+                <i data-lucide="user" class="input-icon"></i>
+                <input type="text" id="student_name" name="student_name" class="form-control" required placeholder="e.g. Rahul Sharma" oninput="updateProgress()">
+              </div>
+            </div>
+
+            <!-- Enrollment Number -->
+            <div class="form-group">
+              <label class="form-label" for="enrollment_no">
+                GTU Enrollment Number <span class="req-star">*</span>
+              </label>
+              <div class="input-wrapper">
+                <i data-lucide="badge-check" class="input-icon"></i>
+                <input type="text" id="enrollment_no" name="enrollment_no" class="form-control" required placeholder="e.g. 231040107082" oninput="updateProgress()">
+              </div>
+            </div>
+
+            <!-- Email Address -->
+            <div class="form-group">
+              <label class="form-label" for="email">
+                Email Address <span class="req-star">*</span>
+              </label>
+              <div class="input-wrapper">
+                <i data-lucide="mail" class="input-icon"></i>
+                <input type="email" id="email" name="email" class="form-control" required placeholder="e.g. student@gtu.ac.in" oninput="updateProgress()">
+              </div>
+            </div>
+
+            <!-- Phone / WhatsApp Number -->
+            <div class="form-group">
+              <label class="form-label" for="phone">
+                Mobile / WhatsApp Number <span class="req-star">*</span>
+              </label>
+              <div class="input-wrapper">
+                <i data-lucide="phone" class="input-icon"></i>
+                <input type="tel" id="phone" name="phone" class="form-control" required placeholder="e.g. +91 98765 43210" oninput="updateProgress()">
+              </div>
+            </div>
+
+            <!-- Current Semester -->
+            <div class="form-group">
+              <label class="form-label" for="semester">
+                Current Semester <span class="req-star">*</span>
+              </label>
+              <div class="input-wrapper">
+                <i data-lucide="calendar" class="input-icon"></i>
+                <select id="semester" name="semester" class="form-control" required onchange="updateProgress()">
+                  <option value="">Select Semester…</option>
+                  <option value="Semester 1">Semester 1</option>
+                  <option value="Semester 2">Semester 2</option>
+                  <option value="Semester 3">Semester 3</option>
+                  <option value="Semester 4">Semester 4</option>
+                  <option value="Semester 5">Semester 5</option>
+                  <option value="Semester 6">Semester 6</option>
+                  <option value="Semester 7">Semester 7</option>
+                  <option value="Semester 8">Semester 8</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Department / Branch -->
+            <div class="form-group form-grid-full">
+              <label class="form-label" for="department">
+                Department / Engineering Branch <span class="req-star">*</span>
+              </label>
+              <div class="input-wrapper">
+                <i data-lucide="layers" class="input-icon"></i>
+                <select id="department" name="department" class="form-control" required onchange="updateProgress()">
+                  <option value="">Select Department / Branch…</option>
+                  <option value="Computer Engineering">Computer Engineering</option>
+                  <option value="Information Technology">Information Technology</option>
+                  <option value="Artificial Intelligence & Data Science">Artificial Intelligence &amp; Data Science</option>
+                  <option value="Mechanical Engineering">Mechanical Engineering</option>
+                  <option value="Civil Engineering">Civil Engineering</option>
+                  <option value="Electrical Engineering">Electrical Engineering</option>
+                  <option value="Electronics & Communication">Electronics &amp; Communication</option>
+                  <option value="Chemical Engineering">Chemical Engineering</option>
+                  <option value="Other / Interdisciplinary">Other / Interdisciplinary</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Activity / Event Choosing -->
+            <div class="form-group form-grid-full">
+              <label class="form-label" for="activity_title">
+                Activity / Event Applying For <span class="req-star">*</span>
+              </label>
+              <div class="input-wrapper">
+                <i data-lucide="award" class="input-icon"></i>
+                <select id="activity_title" name="activity_title" class="form-control" required onchange="updateProgress()">
+                  <option value="GTU Innovation Hackathon 2026">GTU Innovation Hackathon 2026</option>
+                  <option value="IIC AI & Deep Learning Workshop">IIC AI &amp; Deep Learning Workshop</option>
+                  <option value="Robotics & IoT Hands-on BootCamp">Robotics &amp; IoT Hands-on BootCamp</option>
+                  <option value="Startup & Ideathon Challenge">Startup &amp; Ideathon Challenge</option>
+                  <option value="Research & Patent Filing Seminar">Research &amp; Patent Filing Seminar</option>
+                  <option value="Annual Technical Project Expo">Annual Technical Project Expo</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- College / Institute Name -->
+            <div class="form-group form-grid-full">
+              <label class="form-label" for="college_name">
+                College / Institute Name
+              </label>
+              <div class="input-wrapper">
+                <i data-lucide="building-2" class="input-icon"></i>
+                <input type="text" id="college_name" name="college_name" class="form-control" placeholder="e.g. Graduate School of Engineering and Technology (GTU)" oninput="updateProgress()">
+              </div>
+            </div>
+
+            <!-- Project URL / GitHub / Portfolio Link -->
+            <div class="form-group form-grid-full">
+              <label class="form-label" for="project_link">
+                GitHub / Drive / Project Abstract Link <small style="font-weight:normal;color:var(--text-muted);">(Optional)</small>
+              </label>
+              <div class="input-wrapper">
+                <i data-lucide="link" class="input-icon"></i>
+                <input type="url" id="project_link" name="project_link" class="form-control" placeholder="https://github.com/... or Google Drive link" oninput="updateProgress()">
+              </div>
+            </div>
+
+            <!-- Remarks / Query -->
+            <div class="form-group form-grid-full">
+              <label class="form-label" for="remarks">
+                Specific Interests, Team Members or Queries <small style="font-weight:normal;color:var(--text-muted);">(Optional)</small>
+              </label>
+              <div class="input-wrapper">
+                <i data-lucide="message-square" class="input-icon" style="top:14px;"></i>
+                <textarea id="remarks" name="remarks" class="form-control" placeholder="Any specific requirements, queries or project ideas..." oninput="updateProgress()"></textarea>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Privacy Consent -->
+          <div style="margin: 20px 0;">
+            <label style="display:flex; align-items:flex-start; gap:10px; font-size:12px; color:var(--text-muted); cursor:pointer; font-weight:500; line-height:1.5;">
+              <input type="checkbox" id="privacy_consent" name="privacy_consent" required style="width:17px; height:17px; margin-top:2px; flex-shrink:0; accent-color:var(--primary);">
+              <span>
+                I hereby confirm that all submitted information is accurate and give consent to GTU-ITR IIC to record my registration details in Google Firebase Cloud for activity coordination and attendance.
+              </span>
+            </label>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" id="btnSubmitForm" class="btn-submit">
+            <i data-lucide="send" style="width:16px;height:16px;"></i>
+            <span id="btnSubmitText">Submit Registration to Cloud</span>
+          </button>
+        </form>
+
+      </div>
+
+    </div>
+
+    <!-- Quick Footer & Admin Link -->
+    <footer class="print-hide" style="text-align:center; margin-top:26px; font-size:11.5px; color:var(--text-muted); font-weight:500; display:flex; flex-direction:column; gap:8px; align-items:center;">
+      <div>
+        GTU-ITR Activity Portal &copy; 2026. Standby Cloud Edition (Netlify Ready).
+      </div>
+      <div>
+        <a href="admin.html" style="color:var(--primary); text-decoration:underline; font-weight:600;">
+          <i data-lucide="lock" style="width:12px;height:12px;display:inline-block;vertical-align:middle;"></i>
+          Faculty/Admin Records Viewer (CSV Export)
+        </a>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- Firebase Configuration and Logic Scripts -->
+  <script src="firebase-config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

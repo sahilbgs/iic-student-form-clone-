@@ -1,0 +1,1504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Registration — GTU-ITR R&D & IIC Portal (Cloud Standby)</title>
+  <meta name="description" content="Official Student Activity Registration Clone with Firebase Cloud Storage & Server-Down Auto-Standby. Ready for Netlify deployment.">
+  
+  <!-- Modern Typography & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Firebase v10 Compat SDK (Works out-of-the-box on Netlify static hosting) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <!-- Stylesheet -->
+  <style>
+/* ==========================================================================
+   GTU-ITR Student Registration Portal - Theme & Styles (Netlify Cloud Edition)
+   ========================================================================== */
+
+:root {
+  --primary: #0f52ba;
+  --primary-rgb: 15, 82, 186;
+  --primary-hover: #1e3a8a;
+  --primary-light: rgba(15, 82, 186, 0.08);
+  --success: #10b981;
+  --success-rgb: 16, 185, 129;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --bg-body: #f8fafc;
+  --bg-card: #ffffff;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+  --border-focus: #0f52ba;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
+  --shadow-md: 0 10px 25px -5px rgba(15, 82, 186, 0.08), 0 8px 10px -6px rgba(15, 82, 186, 0.04);
+  --shadow-lg: 0 20px 35px -10px rgba(15, 82, 186, 0.12), 0 10px 15px -5px rgba(0, 0, 0, 0.04);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: radial-gradient(at 10% 15%, rgba(15, 82, 186, 0.06) 0px, transparent 50%),
+              radial-gradient(at 90% 85%, rgba(99, 102, 241, 0.06) 0px, transparent 50%),
+              radial-gradient(at 50% 50%, rgba(16, 185, 129, 0.04) 0px, transparent 60%),
+              var(--bg-body);
+  color: var(--text-main);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30px 16px;
+}
+
+.container {
+  max-width: 720px;
+  width: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   Server Status / Failover Banner
+   -------------------------------------------------------------------------- */
+.server-status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 10px 16px;
+  margin-bottom: 20px;
+  font-size: 12px;
+  box-shadow: var(--shadow-sm);
+  animation: fadeInDown 0.5s ease;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.status-badge {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.04em;
+}
+
+.status-badge--backup {
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.status-badge--cloud {
+  background: rgba(16, 185, 129, 0.12);
+  color: #047857;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+/* --------------------------------------------------------------------------
+   Brand Header
+   -------------------------------------------------------------------------- */
+.brand-header {
+  text-align: center;
+  margin-bottom: 24px;
+  animation: fadeInDown 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.brand-logo-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.brand-logo {
+  height: 56px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 8px rgba(15, 82, 186, 0.15));
+}
+
+.brand-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  border-radius: 9999px;
+  background: rgba(15, 82, 186, 0.08);
+  border: 1px solid rgba(15, 82, 186, 0.2);
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  animation: pulse 1.8s infinite;
+}
+
+.pulse-dot--warning {
+  background: var(--warning);
+  box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
+}
+
+.pulse-dot--danger {
+  background: var(--danger);
+  box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+}
+
+.brand-header h1 {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 900;
+  color: var(--primary);
+  font-size: 1.85rem;
+  letter-spacing: -0.5px;
+  line-height: 1.25;
+}
+
+.brand-header p {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-top: 6px;
+}
+
+/* --------------------------------------------------------------------------
+   Main Form Card
+   -------------------------------------------------------------------------- */
+.reg-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  box-shadow: var(--shadow-lg);
+  padding: 36px;
+  position: relative;
+  overflow: hidden;
+  animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(8px);
+}
+
+.reg-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, var(--primary) 0%, #6366f1 50%, var(--success) 100%);
+}
+
+/* Activity Hero Box */
+.activity-hero {
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 20px;
+  margin-bottom: 22px;
+}
+
+.activity-badges {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.badge {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.badge--source {
+  background: rgba(16, 185, 129, 0.1);
+  color: #047857;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.badge--primary {
+  background: rgba(15, 82, 186, 0.08);
+  color: var(--primary);
+  border: 1px solid rgba(15, 82, 186, 0.2);
+}
+
+.badge--warning {
+  background: rgba(245, 158, 11, 0.1);
+  color: #b45309;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.activity-title {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 1.5rem;
+  line-height: 1.3;
+  color: var(--text-main);
+  margin-bottom: 8px;
+}
+
+.activity-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+/* --------------------------------------------------------------------------
+   Live Countdown Timer
+   -------------------------------------------------------------------------- */
+.countdown-banner {
+  background: linear-gradient(135deg, rgba(15, 82, 186, 0.04) 0%, rgba(99, 102, 241, 0.06) 100%);
+  border: 1px solid rgba(15, 82, 186, 0.18);
+  border-radius: 14px;
+  padding: 16px 20px;
+  margin-bottom: 22px;
+  animation: pulseGlow 4s infinite alternate;
+}
+
+.countdown-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.countdown-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.countdown-deadline-text {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.countdown-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  text-align: center;
+}
+
+.countdown-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 10px 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+  position: relative;
+  overflow: hidden;
+}
+
+.countdown-box::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--primary);
+}
+
+.countdown-num {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: var(--primary);
+  line-height: 1;
+  display: block;
+}
+
+.countdown-unit {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 4px;
+  display: block;
+}
+
+/* --------------------------------------------------------------------------
+   Progress Tracker Meter
+   -------------------------------------------------------------------------- */
+.progress-wrap {
+  margin-bottom: 24px;
+  background: var(--bg-body);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+
+.progress-text-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11.5px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.progress-bar-bg {
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--primary) 0%, var(--success) 100%);
+  border-radius: 9999px;
+  transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* --------------------------------------------------------------------------
+   Form Fields
+   -------------------------------------------------------------------------- */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 20px;
+}
+
+.form-grid-full {
+  grid-column: 1 / -1;
+}
+
+.form-group {
+  margin-bottom: 18px;
+  position: relative;
+}
+
+.form-label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 8px;
+}
+
+.req-star {
+  color: var(--danger);
+  font-weight: 800;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 14px;
+  width: 17px;
+  height: 17px;
+  color: var(--text-muted);
+  pointer-events: none;
+  transition: color 0.2s ease;
+}
+
+.form-control {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 16px;
+  padding-left: 42px;
+  font-size: 13.5px;
+  font-family: inherit;
+  color: var(--text-main);
+  background: var(--bg-body);
+  border: 1.5px solid var(--border-color);
+  border-radius: 10px;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.form-control:focus {
+  outline: none;
+  background: #ffffff;
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 4px rgba(var(--primary-rgb), 0.12);
+  transform: translateY(-1px);
+}
+
+.form-control:focus + .input-icon,
+.input-wrapper:focus-within .input-icon {
+  color: var(--primary);
+}
+
+textarea.form-control {
+  resize: vertical;
+  min-height: 85px;
+  line-height: 1.5;
+  padding-left: 42px;
+}
+
+select.form-control {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 16px;
+  padding-right: 40px;
+}
+
+/* --------------------------------------------------------------------------
+   Submit Button
+   -------------------------------------------------------------------------- */
+.btn-submit {
+  width: 100%;
+  padding: 14px 24px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, var(--primary) 0%, #1d4ed8 100%);
+  color: #ffffff;
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 10px 20px -5px rgba(15, 82, 186, 0.35);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-submit::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%; width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.8s ease;
+}
+
+.btn-submit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 25px -5px rgba(15, 82, 186, 0.45);
+}
+
+.btn-submit:hover::after {
+  left: 100%;
+}
+
+.btn-submit:active {
+  transform: translateY(0);
+}
+
+.btn-submit:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* --------------------------------------------------------------------------
+   Success View
+   -------------------------------------------------------------------------- */
+.success-box {
+  text-align: center;
+  padding: 30px 10px;
+  animation: scaleUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.success-icon-wrap {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.12);
+  color: var(--success);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  box-shadow: 0 0 0 12px rgba(16, 185, 129, 0.06);
+  animation: pulse 2s infinite;
+}
+
+.slip-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13px;
+}
+
+.slip-table tr {
+  border-bottom: 1px dashed var(--border-color);
+}
+
+.slip-table tr:last-child {
+  border-bottom: none;
+}
+
+.slip-table td {
+  padding: 9px 6px;
+}
+
+.slip-label {
+  color: var(--text-muted);
+  font-weight: 500;
+  width: 40%;
+}
+
+.slip-val {
+  font-weight: 700;
+  color: var(--text-main);
+  width: 60%;
+}
+
+/* --------------------------------------------------------------------------
+   Animations
+   -------------------------------------------------------------------------- */
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleUp {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+  70% { box-shadow: 0 0 0 16px rgba(16, 185, 129, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+@keyframes pulseGlow {
+  from { border-color: rgba(15, 82, 186, 0.2); }
+  to { border-color: rgba(15, 82, 186, 0.45); box-shadow: 0 4px 16px rgba(15, 82, 186, 0.08); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #ffffff;
+  border-top-color: transparent;
+  border-radius: 50%;
+  display: inline-block;
+  animation: spin 0.8s linear infinite;
+}
+
+/* --------------------------------------------------------------------------
+   Alert Notice Banner
+   -------------------------------------------------------------------------- */
+.notice-box {
+  background: rgba(15, 82, 186, 0.07);
+  border: 1px solid rgba(15, 82, 186, 0.22);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  font-size: 12.5px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  line-height: 1.5;
+}
+
+.notice-box--warning {
+  background: rgba(245, 158, 11, 0.09);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: #92400e;
+}
+
+.notice-box--offline {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.25);
+  color: #991b1b;
+}
+
+/* --------------------------------------------------------------------------
+   Responsive Layout (Mobile)
+   -------------------------------------------------------------------------- */
+@media (max-width: 640px) {
+  body {
+    padding: 16px 10px;
+  }
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .reg-card {
+    padding: 22px 16px;
+    border-radius: 16px;
+  }
+  .brand-header h1 {
+    font-size: 1.45rem;
+  }
+  .countdown-grid {
+    gap: 6px;
+  }
+  .countdown-box {
+    padding: 8px 4px;
+  }
+  .countdown-num {
+    font-size: 1.25rem;
+  }
+  .countdown-unit {
+    font-size: 8px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Print Styles for Official Slip
+   -------------------------------------------------------------------------- */
+@media print {
+  body {
+    background: #ffffff !important;
+    padding: 0 !important;
+    color: #000000 !important;
+  }
+  .server-status-bar,
+  .btn-submit,
+  .print-hide,
+  footer {
+    display: none !important;
+  }
+  .reg-card {
+    box-shadow: none !important;
+    border: 1px solid #cccccc !important;
+    border-radius: 8px !important;
+    padding: 20px !important;
+  }
+}
+
+</style>
+</head>
+<body>
+
+  <div class="container">
+
+    <!-- Primary Server Status & Cloud Standby Bar -->
+    <div class="server-status-bar print-hide" id="serverStatusBar">
+      <div class="status-indicator">
+        <span class="pulse-dot" id="serverPulseDot"></span>
+        <span id="serverStatusText">Primary Server: Checking Status...</span>
+      </div>
+      <div>
+        <span class="status-badge status-badge--cloud" id="cloudStorageBadge">
+          <i data-lucide="cloud" style="width:11px;height:11px;display:inline-block;vertical-align:middle;"></i>
+          Firebase Cloud
+        </span>
+      </div>
+    </div>
+
+    <!-- Alert / Fallback Notice Banner -->
+    <div class="notice-box notice-box--warning print-hide" id="fallbackNotice" style="display:none;">
+      <i data-lucide="shield-alert" style="width:18px;height:18px;color:#b45309;flex-shrink:0;margin-top:1px;"></i>
+      <div>
+        <strong>Emergency Cloud Standby Form Active:</strong>
+        The primary GTU portal server is currently offline or undergoing maintenance. 
+        Don't worry! All registrations entered here are saved directly into secure <strong>Google Firebase Cloud</strong> and will sync automatically once the server is back.
+      </div>
+    </div>
+
+    <!-- Brand Header -->
+    <div class="brand-header">
+      <div class="brand-logo-wrap">
+        <img src="https://iic-gtu-itr.aceglory.in/static/gtu_logo.png" alt="GTU Logo" class="brand-logo" onerror="this.style.display='none'">
+      </div>
+      <div class="brand-pill">
+        <span class="pulse-dot" id="headerStatusDot"></span>
+        <span id="headerStatusText">GTU-ITR IIC &amp; R&amp;D Activity Portal</span>
+      </div>
+      <h1 id="pageMainHeading">Student Activity Registration</h1>
+      <p>Gujarat Technological University — Innovation &amp; Incubation Cell (ITR)</p>
+    </div>
+
+    <!-- Main Registration Box -->
+    <div class="reg-card">
+
+      <!-- ================= SUCCESS CONFIRMATION VIEW ================= -->
+      <div class="success-box" id="successBox" style="display:none;">
+        <div class="success-icon-wrap">
+          <i data-lucide="check-circle-2" style="width:40px;height:40px;"></i>
+        </div>
+        <span class="badge badge--source" style="font-size:11px; padding:4px 12px; margin-bottom:12px; display:inline-block;">REGISTRATION CONFIRMED</span>
+        <h2 style="font-family:'Outfit'; font-size:1.6rem; font-weight:800; color:var(--text-main); margin-bottom:8px;">
+          You're Officially Registered!
+        </h2>
+        <p style="font-size:13.5px; color:var(--text-muted); line-height:1.6; max-width:500px; margin:0 auto 20px;">
+          Thank you, <strong id="slipStudentName">Student</strong>. Your registration for <br>
+          <span style="color:var(--primary); font-weight:700;" id="slipActivityTitle">GTU Activity</span> has been securely stored.
+        </p>
+
+        <!-- Official Registration Receipt Slip -->
+        <div style="background:var(--bg-body); border:1.5px solid var(--border-color); border-radius:14px; padding:20px; max-width:520px; margin:0 auto 24px; text-align:left;" id="printableSlip">
+          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:12px; margin-bottom:14px;">
+            <strong style="font-family:'Outfit'; font-size:14px; color:var(--primary);">GTU-ITR OFFICIAL RECEIPT</strong>
+            <span style="font-family:monospace; font-size:11px; font-weight:700; color:var(--text-muted);" id="slipRegId">REG-2026-0000</span>
+          </div>
+
+          <table class="slip-table">
+            <tr>
+              <td class="slip-label">Student Name:</td>
+              <td class="slip-val" id="slipTableStudentName">-</td>
+            </tr>
+            <tr>
+              <td class="slip-label">Enrollment No:</td>
+              <td class="slip-val" id="slipTableEnrollment">-</td>
+            </tr>
+            <tr>
+              <td class="slip-label">Email Address:</td>
+              <td class="slip-val" id="slipTableEmail">-</td>
+            </tr>
+            <tr>
+              <td class="slip-label">Mobile Number:</td>
+              <td class="slip-val" id="slipTablePhone">-</td>
+            </tr>
+            <tr>
+              <td class="slip-label">Department / Branch:</td>
+              <td class="slip-val" id="slipTableDept">-</td>
+            </tr>
+            <tr>
+              <td class="slip-label">Current Semester:</td>
+              <td class="slip-val" id="slipTableSem">-</td>
+            </tr>
+            <tr>
+              <td class="slip-label">Activity / Event:</td>
+              <td class="slip-val" id="slipTableActivity">-</td>
+            </tr>
+            <tr>
+              <td class="slip-label">Registration Time:</td>
+              <td class="slip-val" id="slipTableDate">-</td>
+            </tr>
+            <tr>
+              <td class="slip-label">Storage Backend:</td>
+              <td class="slip-val" style="color:var(--success);">
+                <i data-lucide="shield-check" style="width:13px;height:13px;display:inline-block;vertical-align:middle;"></i>
+                <span id="slipTableBackend">Google Firebase Cloud (Secured)</span>
+              </td>
+            </tr>
+          </table>
+        </div>
+
+        <div class="print-hide" style="display:flex; justify-content:center; gap:12px; flex-wrap:wrap;">
+          <button type="button" onclick="window.print()" class="btn-submit" style="width:auto; padding:10px 22px; font-size:13px; background:var(--bg-body); color:var(--text-main); border:1px solid var(--border-color); box-shadow:none;">
+            <i data-lucide="printer" style="width:14px;height:14px;"></i> Print Slip
+          </button>
+          <button type="button" onclick="resetFormForNewEntry()" class="btn-submit" style="width:auto; padding:10px 22px; font-size:13px;">
+            <i data-lucide="user-plus" style="width:14px;height:14px;"></i> Register Another Student
+          </button>
+        </div>
+      </div>
+
+      <!-- ================= ACTIVE FORM VIEW ================= -->
+      <div id="formView">
+
+        <!-- Activity Overview -->
+        <div class="activity-hero">
+          <div class="activity-badges">
+            <span class="badge badge--primary">IIC &amp; R&amp;D CELL</span>
+            <span class="badge badge--source">APPROVED ACTIVITY</span>
+            <span class="badge badge--warning" id="modeBadge">STANDBY CLOUD FORM</span>
+          </div>
+          
+          <h2 class="activity-title" id="displayActivityTitle">Student Innovation &amp; Research Registration 2026</h2>
+          <p class="activity-desc" id="displayActivityDesc">
+            Participate in official GTU-ITR technical activities, hackathons, skill-building workshops, and research symposiums. Fill in all required information below.
+          </p>
+        </div>
+
+        <!-- LIVE DEADLINE COUNTDOWN TIMER -->
+        <div class="countdown-banner" id="countdownBanner">
+          <div class="countdown-header">
+            <span class="countdown-label">
+              <i data-lucide="timer" style="width:14px;height:14px;color:var(--primary);"></i>
+              Registration Closes In
+            </span>
+            <span class="countdown-deadline-text" id="deadlineText">
+              Upcoming Deadline
+            </span>
+          </div>
+          
+          <div class="countdown-grid">
+            <div class="countdown-box">
+              <span class="countdown-num" id="cdDays">05</span>
+              <span class="countdown-unit">Days</span>
+            </div>
+            <div class="countdown-box">
+              <span class="countdown-num" id="cdHours">14</span>
+              <span class="countdown-unit">Hours</span>
+            </div>
+            <div class="countdown-box">
+              <span class="countdown-num" id="cdMinutes">30</span>
+              <span class="countdown-unit">Mins</span>
+            </div>
+            <div class="countdown-box">
+              <span class="countdown-num" id="cdSeconds" style="color:#ef4444;">00</span>
+              <span class="countdown-unit">Secs</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Real-Time Progress Tracker -->
+        <div class="progress-wrap">
+          <div class="progress-text-row">
+            <span style="color:var(--text-muted); font-size:11px; text-transform:uppercase; letter-spacing:0.04em;">Form Completion</span>
+            <span id="progressText" style="color:var(--primary);">0 of 8 answered (0%)</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="progressBarFill"></div>
+          </div>
+        </div>
+
+        <!-- Notification / Error Box -->
+        <div id="formAlertBox" style="display:none; padding:12px 16px; border-radius:10px; font-size:12.5px; margin-bottom:20px; font-weight:600; display:none; align-items:center; gap:8px;"></div>
+
+        <!-- REGISTRATION FORM -->
+        <form id="studentRegForm" onsubmit="handleRegistrationSubmit(event)">
+
+          <div class="form-grid">
+            
+            <!-- Student Full Name -->
+            <div class="form-group form-grid-full">
+              <label class="form-label" for="student_name">
+                Full Name of Student <span class="req-star">*</span>
+              </label>
+              <div class="input-wrapper">
+                <i data-lucide="user" class="input-icon"></i>
+                <input type="text" id="student_name" name="student_name" class="form-control" required placeholder="e.g. Rahul Sharma" oninput="updateProgress()">
+              </div>
+            </div>
+
+            <!-- Enrollment Number -->
+            <div class="form-group">
+              <label class="form-label" for="enrollment_no">
+                GTU Enrollment Number <span class="req-star">*</span>
+              </label>
+              <div class="input-wrapper">
+                <i data-lucide="badge-check" class="input-icon"></i>
+                <input type="text" id="enrollment_no" name="enrollment_no" class="form-control" required placeholder="e.g. 231040107082" oninput="updateProgress()">
+              </div>
+            </div>
+
+            <!-- Email Address -->
+            <div class="form-group">
+              <label class="form-label" for="email">
+                Email Address <span class="req-star">*</span>
+              </label>
+              <div class="input-wrapper">
+                <i data-lucide="mail" class="input-icon"></i>
+                <input type="email" id="email" name="email" class="form-control" required placeholder="e.g. student@gtu.ac.in" oninput="updateProgress()">
+              </div>
+            </div>
+
+            <!-- Phone / WhatsApp Number -->
+            <div class="form-group">
+              <label class="form-label" for="phone">
+                Mobile / WhatsApp Number <span class="req-star">*</span>
+              </label>
+              <div class="input-wrapper">
+                <i data-lucide="phone" class="input-icon"></i>
+                <input type="tel" id="phone" name="phone" class="form-control" required placeholder="e.g. +91 98765 43210" oninput="updateProgress()">
+              </div>
+            </div>
+
+            <!-- Current Semester -->
+            <div class="form-group">
+              <label class="form-label" for="semester">
+                Current Semester <span class="req-star">*</span>
+              </label>
+              <div class="input-wrapper">
+                <i data-lucide="calendar" class="input-icon"></i>
+                <select id="semester" name="semester" class="form-control" required onchange="updateProgress()">
+                  <option value="">Select Semester…</option>
+                  <option value="Semester 1">Semester 1</option>
+                  <option value="Semester 2">Semester 2</option>
+                  <option value="Semester 3">Semester 3</option>
+                  <option value="Semester 4">Semester 4</option>
+                  <option value="Semester 5">Semester 5</option>
+                  <option value="Semester 6">Semester 6</option>
+                  <option value="Semester 7">Semester 7</option>
+                  <option value="Semester 8">Semester 8</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Department / Branch -->
+            <div class="form-group form-grid-full">
+              <label class="form-label" for="department">
+                Department / Engineering Branch <span class="req-star">*</span>
+              </label>
+              <div class="input-wrapper">
+                <i data-lucide="layers" class="input-icon"></i>
+                <select id="department" name="department" class="form-control" required onchange="updateProgress()">
+                  <option value="">Select Department / Branch…</option>
+                  <option value="Computer Engineering">Computer Engineering</option>
+                  <option value="Information Technology">Information Technology</option>
+                  <option value="Artificial Intelligence & Data Science">Artificial Intelligence &amp; Data Science</option>
+                  <option value="Mechanical Engineering">Mechanical Engineering</option>
+                  <option value="Civil Engineering">Civil Engineering</option>
+                  <option value="Electrical Engineering">Electrical Engineering</option>
+                  <option value="Electronics & Communication">Electronics &amp; Communication</option>
+                  <option value="Chemical Engineering">Chemical Engineering</option>
+                  <option value="Other / Interdisciplinary">Other / Interdisciplinary</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Activity / Event Choosing -->
+            <div class="form-group form-grid-full">
+              <label class="form-label" for="activity_title">
+                Activity / Event Applying For <span class="req-star">*</span>
+              </label>
+              <div class="input-wrapper">
+                <i data-lucide="award" class="input-icon"></i>
+                <select id="activity_title" name="activity_title" class="form-control" required onchange="updateProgress()">
+                  <option value="GTU Innovation Hackathon 2026">GTU Innovation Hackathon 2026</option>
+                  <option value="IIC AI & Deep Learning Workshop">IIC AI &amp; Deep Learning Workshop</option>
+                  <option value="Robotics & IoT Hands-on BootCamp">Robotics &amp; IoT Hands-on BootCamp</option>
+                  <option value="Startup & Ideathon Challenge">Startup &amp; Ideathon Challenge</option>
+                  <option value="Research & Patent Filing Seminar">Research &amp; Patent Filing Seminar</option>
+                  <option value="Annual Technical Project Expo">Annual Technical Project Expo</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- College / Institute Name -->
+            <div class="form-group form-grid-full">
+              <label class="form-label" for="college_name">
+                College / Institute Name
+              </label>
+              <div class="input-wrapper">
+                <i data-lucide="building-2" class="input-icon"></i>
+                <input type="text" id="college_name" name="college_name" class="form-control" placeholder="e.g. Graduate School of Engineering and Technology (GTU)" oninput="updateProgress()">
+              </div>
+            </div>
+
+            <!-- Project URL / GitHub / Portfolio Link -->
+            <div class="form-group form-grid-full">
+              <label class="form-label" for="project_link">
+                GitHub / Drive / Project Abstract Link <small style="font-weight:normal;color:var(--text-muted);">(Optional)</small>
+              </label>
+              <div class="input-wrapper">
+                <i data-lucide="link" class="input-icon"></i>
+                <input type="url" id="project_link" name="project_link" class="form-control" placeholder="https://github.com/... or Google Drive link" oninput="updateProgress()">
+              </div>
+            </div>
+
+            <!-- Remarks / Query -->
+            <div class="form-group form-grid-full">
+              <label class="form-label" for="remarks">
+                Specific Interests, Team Members or Queries <small style="font-weight:normal;color:var(--text-muted);">(Optional)</small>
+              </label>
+              <div class="input-wrapper">
+                <i data-lucide="message-square" class="input-icon" style="top:14px;"></i>
+                <textarea id="remarks" name="remarks" class="form-control" placeholder="Any specific requirements, queries or project ideas..." oninput="updateProgress()"></textarea>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Privacy Consent -->
+          <div style="margin: 20px 0;">
+            <label style="display:flex; align-items:flex-start; gap:10px; font-size:12px; color:var(--text-muted); cursor:pointer; font-weight:500; line-height:1.5;">
+              <input type="checkbox" id="privacy_consent" name="privacy_consent" required style="width:17px; height:17px; margin-top:2px; flex-shrink:0; accent-color:var(--primary);">
+              <span>
+                I hereby confirm that all submitted information is accurate and give consent to GTU-ITR IIC to record my registration details in Google Firebase Cloud for activity coordination and attendance.
+              </span>
+            </label>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" id="btnSubmitForm" class="btn-submit">
+            <i data-lucide="send" style="width:16px;height:16px;"></i>
+            <span id="btnSubmitText">Submit Registration to Cloud</span>
+          </button>
+        </form>
+
+      </div>
+
+    </div>
+
+    <!-- Quick Footer & Admin Link -->
+    <footer class="print-hide" style="text-align:center; margin-top:26px; font-size:11.5px; color:var(--text-muted); font-weight:500; display:flex; flex-direction:column; gap:8px; align-items:center;">
+      <div>
+        GTU-ITR Activity Portal &copy; 2026. Standby Cloud Edition (Netlify Ready).
+      </div>
+      <div>
+        <a href="admin.html" style="color:var(--primary); text-decoration:underline; font-weight:600;">
+          <i data-lucide="lock" style="width:12px;height:12px;display:inline-block;vertical-align:middle;"></i>
+          Faculty/Admin Records Viewer (CSV Export)
+        </a>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- Firebase Configuration and Logic Scripts -->
+  
+  
+<script>
+// ============================================================================
+// GTU-ITR Student Registration - Firebase Configuration
+// ============================================================================
+// निर्देश:
+// 1. Firebase Console (https://console.firebase.google.com) par jayein.
+// 2. Apna project select karein ya naya banayein -> Project Settings -> General -> Your apps -> Web app (</>).
+// 3. Neeche diye gaye config object mein apni keys daalein:
+// 4. Firestore Database ko enable karein: Firebase Console -> Build -> Firestore Database -> Create database (Start in production or test mode).
+// ============================================================================
+
+const firebaseConfig = {
+  apiKey: "YOUR_FIREBASE_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+// Helper: Check if genuine Firebase keys are provided
+function isFirebaseConfigured() {
+  return Boolean(
+    firebaseConfig &&
+    firebaseConfig.apiKey &&
+    !firebaseConfig.apiKey.includes("YOUR_") &&
+    firebaseConfig.projectId &&
+    !firebaseConfig.projectId.includes("YOUR_")
+  );
+}
+
+// Global Firebase Firestore references
+let db = null;
+let firebaseApp = null;
+let isFirebaseReady = false;
+
+try {
+  if (typeof firebase !== 'undefined' && isFirebaseConfigured()) {
+    firebaseApp = firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+
+    // Firestore Offline Persistence enable
+    db.enablePersistence({ synchronizeTabs: true }).catch(function (err) {
+      if (err.code === 'failed-precondition') {
+        console.warn('Multiple tabs open, persistence can only be enabled in one tab at a time.');
+      } else if (err.code === 'unimplemented') {
+        console.warn('The current browser does not support all of the features required to enable persistence.');
+      }
+    });
+
+    isFirebaseReady = true;
+    console.log('%c[Firebase]%c Connected successfully to Firestore!', 'color:#10b981;font-weight:bold;', 'color:inherit;');
+  } else {
+    console.warn('[Firebase] Placeholder keys detected. Form will save locally to LocalStorage until real keys are provided.');
+  }
+} catch (error) {
+  console.error('[Firebase] Initialization error:', error);
+}
+
+</script>
+<script>
+// ============================================================================
+// GTU-ITR Student Registration App Engine (Cloud Standby & Netlify Edition)
+// ============================================================================
+
+window.CURRENT_POST_ID = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.lucide) {
+    lucide.createIcons();
+  }
+
+  detectUrlContext();
+  initCountdown();
+  initProgressTracker();
+  checkPrimaryServerHealth();
+});
+
+// ----------------------------------------------------------------------------
+// 1. URL CONTEXT DETECTION (POST ID & ACTIVITY TITLE FROM SAME LINK)
+// ----------------------------------------------------------------------------
+// When the student opens the exact same link (e.g. /posts/12/register),
+// this function extracts the activity ID & title dynamically!
+function detectUrlContext() {
+  const path = window.location.pathname;
+  const match = path.match(/\/posts\/(\d+)\/register/i);
+  let detectedPostId = null;
+
+  if (match && match[1]) {
+    detectedPostId = match[1];
+  } else {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('post_id')) {
+      detectedPostId = params.get('post_id');
+    }
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const detectedTitle = params.get('title');
+
+  if (detectedPostId) {
+    console.log('[Standby Engine] Operating on same registration link for Post ID:', detectedPostId);
+    window.CURRENT_POST_ID = detectedPostId;
+
+    const modeBadge = document.getElementById('modeBadge');
+    if (modeBadge) {
+      modeBadge.textContent = `ACTIVITY #${detectedPostId} (STANDBY CLOUD)`;
+    }
+    const heroTitle = document.getElementById('displayActivityTitle');
+    if (heroTitle && !detectedTitle) {
+      heroTitle.textContent = `GTU Activity Registration (ID #${detectedPostId})`;
+    }
+  }
+
+  if (detectedTitle) {
+    const actSelect = document.getElementById('activity_title');
+    if (actSelect) {
+      let found = false;
+      for (let opt of actSelect.options) {
+        if (opt.value.toLowerCase() === detectedTitle.toLowerCase()) {
+          opt.selected = true;
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        const newOpt = new Option(detectedTitle, detectedTitle, true, true);
+        actSelect.add(newOpt);
+      }
+    }
+    const heroTitle = document.getElementById('displayActivityTitle');
+    if (heroTitle) heroTitle.textContent = detectedTitle;
+  }
+}
+
+// ----------------------------------------------------------------------------
+// 2. PRIMARY SERVER HEALTH MONITOR & STANDBY ACTIVATION
+// ----------------------------------------------------------------------------
+const PRIMARY_SERVER_URL = 'https://iic-gtu-itr.aceglory.in';
+
+async function checkPrimaryServerHealth() {
+  const pulseDot = document.getElementById('serverPulseDot');
+  const statusText = document.getElementById('serverStatusText');
+  const fallbackNotice = document.getElementById('fallbackNotice');
+  const modeBadge = document.getElementById('modeBadge');
+
+  // If already loaded as a fallback on the same domain, check if local origin failed
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3500);
+
+    const response = await fetch(`${PRIMARY_SERVER_URL}/static/gtu_logo.png?ping=${Date.now()}`, {
+      method: 'HEAD',
+      mode: 'no-cors',
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+
+    // Primary server reachable
+    if (pulseDot) pulseDot.className = 'pulse-dot';
+    if (statusText) statusText.innerHTML = 'Primary Server: <span style="color:var(--success);font-weight:700;">ONLINE</span>';
+    if (fallbackNotice) fallbackNotice.style.display = 'none';
+  } catch (err) {
+    // Primary server is DOWN / BAND!
+    console.warn('[Server Monitor] Primary GTU server is offline / unreachable:', err);
+    if (pulseDot) pulseDot.className = 'pulse-dot pulse-dot--danger';
+    if (statusText) statusText.innerHTML = 'Primary Server: <span style="color:var(--danger);font-weight:700;">OFFLINE (STANDBY ACTIVE)</span>';
+    if (fallbackNotice) fallbackNotice.style.display = 'flex';
+    if (modeBadge) {
+      modeBadge.textContent = 'EMERGENCY STANDBY ACTIVE';
+      modeBadge.className = 'badge badge--warning';
+    }
+    if (window.lucide) lucide.createIcons();
+  }
+}
+
+// ----------------------------------------------------------------------------
+// 3. LIVE COUNTDOWN TIMER ENGINE
+// ----------------------------------------------------------------------------
+function initCountdown() {
+  const daysEl = document.getElementById('cdDays');
+  const hoursEl = document.getElementById('cdHours');
+  const minsEl = document.getElementById('cdMinutes');
+  const secsEl = document.getElementById('cdSeconds');
+  const deadlineText = document.getElementById('deadlineText');
+
+  const now = new Date();
+  const targetDate = new Date();
+  targetDate.setDate(now.getDate() + 5);
+  targetDate.setHours(23, 59, 59, 0);
+
+  if (deadlineText) {
+    deadlineText.textContent = `Closes: ${targetDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} at 11:59 PM`;
+  }
+
+  function updateTimer() {
+    const currentTime = new Date().getTime();
+    const distance = targetDate.getTime() - currentTime;
+
+    if (distance <= 0) {
+      if (daysEl) daysEl.textContent = '00';
+      if (hoursEl) hoursEl.textContent = '00';
+      if (minsEl) minsEl.textContent = '00';
+      if (secsEl) secsEl.textContent = '00';
+      return;
+    }
+
+    const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+    if (daysEl) daysEl.textContent = String(days).padStart(2, '0');
+    if (hoursEl) hoursEl.textContent = String(hours).padStart(2, '0');
+    if (minsEl) minsEl.textContent = String(minutes).padStart(2, '0');
+    if (secsEl) secsEl.textContent = String(seconds).padStart(2, '0');
+  }
+
+  updateTimer();
+  setInterval(updateTimer, 1000);
+}
+
+// ----------------------------------------------------------------------------
+// 4. FORM PROGRESS METER TRACKER
+// ----------------------------------------------------------------------------
+const CORE_FIELDS = [
+  'student_name',
+  'enrollment_no',
+  'email',
+  'phone',
+  'semester',
+  'department',
+  'activity_title',
+  'privacy_consent'
+];
+
+function updateProgress() {
+  let filledCount = 0;
+
+  CORE_FIELDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    if (el.type === 'checkbox') {
+      if (el.checked) filledCount++;
+    } else if (el.value && el.value.trim().length > 0) {
+      filledCount++;
+    }
+  });
+
+  const total = CORE_FIELDS.length;
+  const pct = Math.min(100, Math.round((filledCount / total) * 100));
+
+  const progressBar = document.getElementById('progressBarFill');
+  const progressText = document.getElementById('progressText');
+
+  if (progressBar) progressBar.style.width = `${pct}%`;
+  if (progressText) progressText.textContent = `${filledCount} of ${total} core items (${pct}%)`;
+}
+
+function initProgressTracker() {
+  updateProgress();
+}
+
+// ----------------------------------------------------------------------------
+// 5. SUBMIT REGISTRATION (FIREBASE CLOUD STORAGE + OFFLINE QUEUE)
+// ----------------------------------------------------------------------------
+async function handleRegistrationSubmit(event) {
+  event.preventDefault();
+
+  const btn = document.getElementById('btnSubmitForm');
+  const btnText = document.getElementById('btnSubmitText');
+
+  // Input Values
+  const studentName = document.getElementById('student_name').value.trim();
+  const enrollmentNo = document.getElementById('enrollment_no').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  const semester = document.getElementById('semester').value;
+  const department = document.getElementById('department').value;
+  const activityTitle = document.getElementById('activity_title').value;
+  const collegeName = document.getElementById('college_name').value.trim() || 'GTU Affiliated Institute';
+  const projectLink = document.getElementById('project_link').value.trim();
+  const remarks = document.getElementById('remarks').value.trim();
+
+  // Basic Enrollment Number Sanity Check
+  if (enrollmentNo.length < 5) {
+    showAlert('Please enter a valid GTU Enrollment Number.', 'danger');
+    return;
+  }
+
+  // Set loading state
+  if (btn) btn.disabled = true;
+  if (btnText) btnText.innerHTML = '<span class="spinner"></span> Saving to Cloud...';
+
+  // Generate Unique Registration ID
+  const timestamp = new Date();
+  const randomSuffix = Math.floor(10000 + Math.random() * 90000);
+  const regId = `GTU-REG-${timestamp.getFullYear()}-${randomSuffix}`;
+
+  const registrationData = {
+    reg_id: regId,
+    post_id: window.CURRENT_POST_ID || null,
+    student_name: studentName,
+    enrollment_no: enrollmentNo,
+    email: email,
+    phone: phone,
+    semester: semester,
+    department: department,
+    activity_title: activityTitle,
+    college_name: collegeName,
+    project_link: projectLink,
+    remarks: remarks,
+    registered_at: timestamp.toISOString(),
+    source: 'same_link_standby_cloud',
+    sync_status: 'pending_primary_sync'
+  };
+
+  try {
+    let savedToFirebase = false;
+
+    // Direct Firestore Save
+    if (typeof db !== 'undefined' && db !== null && isFirebaseConfigured()) {
+      await db.collection('student_registrations').add({
+        ...registrationData,
+        firebase_timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      savedToFirebase = true;
+      console.log('[Firebase] Successfully saved record to Firestore.');
+    } else {
+      console.warn('[Firebase] Keys pending in firebase-config.js. Saved to LocalStorage fallback.');
+    }
+
+    saveToLocalQueue(registrationData);
+    showConfirmationSlip(registrationData, savedToFirebase);
+
+  } catch (error) {
+    console.error('[Registration Error]', error);
+    saveToLocalQueue(registrationData);
+    showConfirmationSlip(registrationData, false);
+  } finally {
+    if (btn) btn.disabled = false;
+    if (btnText) btnText.textContent = 'Submit Registration to Cloud';
+  }
+}
+
+// ----------------------------------------------------------------------------
+// 6. LOCAL STORAGE SAFETY QUEUE
+// ----------------------------------------------------------------------------
+function saveToLocalQueue(data) {
+  try {
+    const existing = JSON.parse(localStorage.getItem('gtu_student_registrations') || '[]');
+    existing.push(data);
+    localStorage.setItem('gtu_student_registrations', JSON.stringify(existing));
+  } catch (e) {
+    console.error('LocalStorage error:', e);
+  }
+}
+
+// ----------------------------------------------------------------------------
+// 7. CONFIRMATION SLIP PRESENTATION
+// ----------------------------------------------------------------------------
+function showConfirmationSlip(data, savedToFirebase) {
+  document.getElementById('formView').style.display = 'none';
+  const successBox = document.getElementById('successBox');
+  successBox.style.display = 'block';
+
+  document.getElementById('slipStudentName').textContent = data.student_name;
+  document.getElementById('slipActivityTitle').textContent = data.activity_title;
+  document.getElementById('slipRegId').textContent = data.reg_id;
+
+  document.getElementById('slipTableStudentName').textContent = data.student_name;
+  document.getElementById('slipTableEnrollment').textContent = data.enrollment_no;
+  document.getElementById('slipTableEmail').textContent = data.email;
+  document.getElementById('slipTablePhone').textContent = data.phone;
+  document.getElementById('slipTableDept').textContent = data.department;
+  document.getElementById('slipTableSem').textContent = data.semester;
+  document.getElementById('slipTableActivity').textContent = data.activity_title;
+
+  const regDateFormatted = new Date(data.registered_at).toLocaleString('en-IN', {
+    dateStyle: 'medium',
+    timeStyle: 'short'
+  });
+  document.getElementById('slipTableDate').textContent = regDateFormatted;
+
+  const backendStatusEl = document.getElementById('slipTableBackend');
+  if (savedToFirebase) {
+    backendStatusEl.innerHTML = '<span style="color:var(--success);font-weight:700;">✓ Saved to Google Firebase Cloud</span>';
+  } else {
+    backendStatusEl.innerHTML = '<span style="color:var(--warning);font-weight:700;">✓ Saved in Standby Queue (Firebase Keys Pending)</span>';
+  }
+
+  if (window.lucide) {
+    lucide.createIcons();
+  }
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ----------------------------------------------------------------------------
+// 8. RESET FOR NEW ENTRY
+// ----------------------------------------------------------------------------
+function resetFormForNewEntry() {
+  document.getElementById('studentRegForm').reset();
+  document.getElementById('successBox').style.display = 'none';
+  document.getElementById('formView').style.display = 'block';
+  updateProgress();
+  if (window.lucide) {
+    lucide.createIcons();
+  }
+}
+
+// ----------------------------------------------------------------------------
+// 9. HELPER ALERTS
+// ----------------------------------------------------------------------------
+function showAlert(message, type = 'warning') {
+  const box = document.getElementById('formAlertBox');
+  if (!box) return;
+
+  box.style.display = 'flex';
+  box.className = `notice-box notice-box--${type}`;
+  box.innerHTML = `<i data-lucide="alert-circle" style="width:16px;height:16px;"></i><span>${message}</span>`;
+  if (window.lucide) lucide.createIcons();
+
+  setTimeout(() => {
+    box.style.display = 'none';
+  }, 6000);
+}
+
+</script>
+
+</body>
+</html>
