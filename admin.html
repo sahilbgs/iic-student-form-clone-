@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin & Faculty Standby Portal — GTU-ITR Registrations</title>
+  <title>Faculty Admin — Internal Hackathon (SIH2026) Standby Registrations</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
@@ -13,10 +13,34 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
-  <link rel="stylesheet" href="styles.css">
   <style>
+    :root {
+      --primary: #0f52ba;
+      --primary-hover: #1e3a8a;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --bg-body: #f8fafc;
+      --bg-card: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
+      --shadow-md: 0 10px 25px -5px rgba(15, 82, 186, 0.08);
+      --shadow-lg: 0 20px 35px -10px rgba(15, 82, 186, 0.12);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-body);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 30px 20px;
+      display: flex;
+      justify-content: center;
+    }
     .admin-container {
-      max-width: 1080px;
+      max-width: 1200px;
       width: 100%;
     }
     .table-card {
@@ -35,16 +59,32 @@
       border-bottom: 1px solid var(--border-color);
       flex-wrap: wrap;
       gap: 12px;
+      background: #fafbfc;
     }
     .search-input {
       padding: 8px 14px;
       border: 1.5px solid var(--border-color);
       border-radius: 8px;
       font-size: 13px;
-      width: 260px;
+      width: 280px;
+      outline: none;
+    }
+    .search-input:focus { border-color: var(--primary); }
+    .btn-submit {
+      padding: 9px 18px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 12.5px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
     .btn-export {
-      padding: 8px 16px;
+      padding: 9px 18px;
       background: var(--success);
       color: #fff;
       border: none;
@@ -55,10 +95,16 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      transition: opacity 0.2s;
     }
-    .btn-export:hover {
-      opacity: 0.9;
+    .btn-action {
+      padding: 5px 10px;
+      background: #eff6ff;
+      color: var(--primary);
+      border: 1px solid #bfdbfe;
+      border-radius: 6px;
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
     }
     .data-table {
       width: 100%;
@@ -72,6 +118,7 @@
       font-weight: 700;
       color: var(--text-muted);
       border-bottom: 1px solid var(--border-color);
+      white-space: nowrap;
     }
     .data-table td {
       padding: 12px 14px;
@@ -79,69 +126,105 @@
       color: var(--text-main);
     }
     .data-table tr:hover {
-      background: #f1f5f9;
+      background: #f8fafc;
     }
-    .pin-modal {
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .badge--soft-blue { background: #dbeafe; color: #1e40af; }
+    .badge--soft-green { background: #dcfce7; color: #166534; }
+    .badge--soft-orange { background: #ffedd5; color: #9a3412; }
+
+    /* Modal */
+    .modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(15, 23, 42, 0.7);
+      background: rgba(15, 23, 42, 0.65);
       backdrop-filter: blur(4px);
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 999;
+      padding: 20px;
     }
-    .pin-card {
+    .modal-card {
       background: #ffffff;
-      padding: 30px;
+      padding: 24px;
       border-radius: 16px;
-      max-width: 360px;
-      width: 90%;
-      text-align: center;
+      max-width: 720px;
+      width: 100%;
+      max-height: 85vh;
+      overflow-y: auto;
       box-shadow: var(--shadow-lg);
     }
   </style>
 </head>
 <body>
 
-  <!-- Admin PIN Protection Modal -->
-  <div class="pin-modal" id="pinModal">
-    <div class="pin-card">
-      <div class="success-icon-wrap" style="background:rgba(15,82,186,0.1); color:var(--primary); box-shadow:none; margin-bottom:16px;">
-        <i data-lucide="shield-lock" style="width:34px;height:34px;"></i>
+  <!-- Modal: PIN Protection -->
+  <div class="modal-overlay" id="pinModal">
+    <div class="modal-card" style="max-width: 360px; text-align: center;">
+      <div style="width: 56px; height: 56px; border-radius: 50%; background: #eff6ff; color: var(--primary); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+        <i data-lucide="shield-lock" style="width: 28px; height: 28px;"></i>
       </div>
-      <h3 style="font-family:'Outfit'; font-size:1.3rem; margin-bottom:8px;">Faculty Access</h3>
-      <p style="font-size:12.5px; color:var(--text-muted); margin-bottom:18px;">
-        Enter the coordinator passcode to view and export student registrations.
+      <h3 style="font-family: 'Outfit'; font-size: 1.3rem; margin-bottom: 8px;">Faculty Access</h3>
+      <p style="font-size: 12.5px; color: var(--text-muted); margin-bottom: 16px;">
+        Enter coordinator passcode to view and export registered Hackathon teams.
       </p>
-      <input type="password" id="adminPinInput" class="form-control" style="text-align:center; font-size:18px; letter-spacing:4px; padding-left:16px; margin-bottom:14px;" placeholder="••••" autofocus onkeyup="if(event.key==='Enter') verifyPin()">
-      <button onclick="verifyPin()" class="btn-submit" style="font-size:13.5px; padding:10px 18px;">
+      <input type="password" id="adminPinInput" class="search-input" style="width: 100%; text-align: center; font-size: 18px; letter-spacing: 4px; margin-bottom: 14px;" placeholder="••••" autofocus onkeyup="if(event.key==='Enter') verifyPin()">
+      <button onclick="verifyPin()" class="btn-submit" style="width: 100%; justify-content: center; font-size: 13.5px;">
         Unlock Records
       </button>
-      <small style="display:block; margin-top:10px; font-size:10.5px; color:var(--text-muted);">Default Demo PIN: <strong>gtu2026</strong></small>
+      <small style="display: block; margin-top: 10px; font-size: 11px; color: var(--text-muted);">Default PIN: <strong>gtu2026</strong></small>
+    </div>
+  </div>
+
+  <!-- Modal: View Registration Details -->
+  <div class="modal-overlay" id="detailModal" style="display:none;">
+    <div class="modal-card">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:12px; margin-bottom:16px;">
+        <div>
+          <h3 style="font-family:'Outfit'; font-size:1.3rem; color:var(--text-main);" id="detailTeamName">Team Details</h3>
+          <span style="font-size:11.5px; color:var(--text-muted);" id="detailRegId">REG-000</span>
+        </div>
+        <button onclick="closeDetails()" style="border:none; background:none; cursor:pointer; padding:4px;">
+          <i data-lucide="x" style="width:20px;height:20px;color:var(--text-muted);"></i>
+        </button>
+      </div>
+
+      <div id="detailContent" style="font-size:13px; line-height:1.6;"></div>
+
+      <div style="margin-top:20px; text-align:right;">
+        <button onclick="closeDetails()" class="btn-submit" style="background:#64748b;">Close</button>
+      </div>
     </div>
   </div>
 
   <div class="admin-container">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
       <div>
         <a href="index.html" style="font-size:12px; color:var(--primary); font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:4px; margin-bottom:6px;">
-          <i data-lucide="arrow-left" style="width:14px;height:14px;"></i> Back to Registration Form
+          <i data-lucide="arrow-left" style="width:14px;height:14px;"></i> Back to Live Registration Form
         </a>
         <h1 style="font-family:'Outfit'; font-size:1.6rem; color:var(--primary); font-weight:800;">
-          GTU-ITR Cloud Standby Registrations
+          Internal Hackathon (SIH 2026) — Standby Registrations
         </h1>
-        <p style="font-size:12px; color:var(--text-muted); font-weight:500;">
-          Real-time synchronized registrations saved to Google Firebase Cloud &amp; Fallback Buffer.
+        <p style="font-size:12.5px; color:var(--text-muted); font-weight:500;">
+          Real-time submissions stored in Google Firebase Cloud during server standby.
         </p>
       </div>
 
       <div style="display:flex; gap:10px;">
-        <button onclick="loadRegistrations()" class="btn-submit" style="width:auto; padding:8px 16px; font-size:12.5px; background:#ffffff; color:var(--text-main); border:1px solid var(--border-color); box-shadow:none;">
+        <button onclick="loadRegistrations()" class="btn-submit" style="background:#ffffff; color:var(--text-main); border:1px solid var(--border-color);">
           <i data-lucide="refresh-cw" style="width:14px;height:14px;"></i> Refresh
         </button>
         <button onclick="exportToCSV()" class="btn-export">
-          <i data-lucide="download" style="width:14px;height:14px;"></i> Export to CSV
+          <i data-lucide="download" style="width:14px;height:14px;"></i> Export Full CSV
         </button>
       </div>
     </div>
@@ -149,10 +232,10 @@
     <div class="table-card">
       <div class="admin-toolbar">
         <div style="font-weight:700; font-size:13px; color:var(--text-main);">
-          Total Submissions: <span id="totalCount" style="color:var(--primary); font-size:15px;">0</span>
+          Total Teams Registered: <span id="totalCount" style="color:var(--primary); font-size:16px; font-weight:800;">0</span>
         </div>
         <div>
-          <input type="text" id="filterInput" class="search-input" placeholder="Search by name, roll no, branch..." oninput="filterRecords()">
+          <input type="text" id="filterInput" class="search-input" placeholder="Search by team, leader, PSID, theme..." oninput="filterRecords()">
         </div>
       </div>
 
@@ -160,15 +243,15 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Student Name</th>
-              <th>Enrollment No</th>
-              <th>Department</th>
-              <th>Semester</th>
-              <th>Mobile</th>
-              <th>Email</th>
-              <th>Activity</th>
-              <th>Date</th>
+              <th>Reg ID</th>
+              <th>Team Name</th>
+              <th>Team Leader</th>
+              <th>Category</th>
+              <th>PSID</th>
+              <th>Problem Statement Title</th>
+              <th>Theme</th>
+              <th>Submitted At</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody id="recordsBody">
@@ -183,8 +266,27 @@
     </div>
   </div>
 
-  <script src="firebase-config.js"></script>
   <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBRAEuMlSKddLiYBK6ShTj4jlLFynxpEN0",
+      authDomain: "iic-student-form-clone.firebaseapp.com",
+      projectId: "iic-student-form-clone",
+      storageBucket: "iic-student-form-clone.firebasestorage.app",
+      messagingSenderId: "711030610843",
+      appId: "1:711030610843:web:40df2fc74d5a3c177a5f3e",
+      measurementId: "G-HQN8WE3LJP"
+    };
+
+    let db = null;
+    try {
+      if (typeof firebase !== 'undefined') {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+      }
+    } catch(e) {
+      console.warn('Firebase init:', e);
+    }
+
     let allRecords = [];
 
     function verifyPin() {
@@ -193,33 +295,40 @@
         document.getElementById('pinModal').style.display = 'none';
         loadRegistrations();
       } else {
-        alert('Incorrect PIN. Default demo PIN is gtu2026');
+        alert('Incorrect PIN. Default PIN is gtu2026');
       }
     }
 
     async function loadRegistrations() {
       const tbody = document.getElementById('recordsBody');
-      tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:30px;"><span class="spinner" style="border-color:var(--primary); border-top-color:transparent;"></span> Loading registrations from Cloud...</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:30px; color:var(--text-muted);">Loading registrations from Firebase Cloud...</td></tr>';
 
       allRecords = [];
 
-      // 1. Fetch from Firebase Firestore if configured
-      if (typeof db !== 'undefined' && db !== null && isFirebaseConfigured()) {
+      // 1. Fetch from Firestore (both 'registrations' and 'student_registrations')
+      if (db) {
         try {
-          const snapshot = await db.collection('student_registrations').orderBy('registered_at', 'desc').get();
-          snapshot.forEach(doc => {
-            allRecords.push(doc.data());
-          });
+          const snap1 = await db.collection('registrations').get();
+          snap1.forEach(doc => allRecords.push(doc.data()));
         } catch (e) {
-          console.warn('Firebase read error:', e);
+          console.warn('Firestore registrations read error:', e);
         }
+
+        try {
+          const snap2 = await db.collection('student_registrations').get();
+          snap2.forEach(doc => {
+            const data = doc.data();
+            if (!allRecords.some(r => r.reg_id === data.reg_id)) {
+              allRecords.push(data);
+            }
+          });
+        } catch (e) {}
       }
 
-      // 2. Fetch local storage registrations
+      // 2. Fetch local storage fallback
       try {
-        const local = JSON.parse(localStorage.getItem('gtu_student_registrations') || '[]');
+        const local = JSON.parse(localStorage.getItem('gtu_registrations') || '[]');
         local.forEach(rec => {
-          // Avoid duplicate ID if already in records
           if (!allRecords.some(r => r.reg_id === rec.reg_id)) {
             allRecords.push(rec);
           }
@@ -234,21 +343,23 @@
       document.getElementById('totalCount').textContent = records.length;
 
       if (records.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:30px; color:var(--text-muted);">No student registrations found yet.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:30px; color:var(--text-muted);">No team registrations recorded yet.</td></tr>';
         return;
       }
 
-      tbody.innerHTML = records.map(r => `
+      tbody.innerHTML = records.map((r, idx) => `
         <tr>
-          <td><code style="font-size:11px; background:#f1f5f9; padding:2px 6px; border-radius:4px;">${r.reg_id || 'REG'}</code></td>
-          <td><strong>${escapeHtml(r.student_name || '-')}</strong></td>
-          <td><code>${escapeHtml(r.enrollment_no || '-')}</code></td>
-          <td>${escapeHtml(r.department || '-')}</td>
-          <td>${escapeHtml(r.semester || '-')}</td>
-          <td>${escapeHtml(r.phone || '-')}</td>
-          <td><a href="mailto:${escapeHtml(r.email || '')}" style="color:var(--primary);">${escapeHtml(r.email || '-')}</a></td>
-          <td>${escapeHtml(r.activity_title || '-')}</td>
-          <td><small style="color:var(--text-muted);">${r.registered_at ? new Date(r.registered_at).toLocaleDateString('en-IN') : '-'}</small></td>
+          <td><code style="font-size:11px; background:#f1f5f9; padding:2px 6px; border-radius:4px;">${escapeHtml(r.reg_id || 'REG')}</code></td>
+          <td><strong style="color:var(--primary); font-size:13px;">${escapeHtml(r.team_name || r.student_name || '-')}</strong></td>
+          <td>${escapeHtml(r.leader_name || '-')}</td>
+          <td><span class="badge badge--soft-blue">${escapeHtml(r.problem_category || '-')}</span></td>
+          <td><code>${escapeHtml(r.psid || '-')}</code></td>
+          <td style="max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${escapeHtml(r.ps_title || '-')}">${escapeHtml(r.ps_title || '-')}</td>
+          <td><span class="badge badge--soft-orange">${escapeHtml(r.theme || '-')}</span></td>
+          <td><small style="color:var(--text-muted);">${r.submitted_at ? new Date(r.submitted_at).toLocaleString('en-IN') : '-'}</small></td>
+          <td>
+            <button onclick="viewDetails(${idx})" class="btn-action">View Full Team</button>
+          </td>
         </tr>
       `).join('');
 
@@ -256,48 +367,96 @@
     }
 
     function filterRecords() {
-      const query = document.getElementById('filterInput').value.toLowerCase();
+      const q = document.getElementById('filterInput').value.toLowerCase();
       const filtered = allRecords.filter(r => 
-        (r.student_name && r.student_name.toLowerCase().includes(query)) ||
-        (r.enrollment_no && r.enrollment_no.toLowerCase().includes(query)) ||
-        (r.department && r.department.toLowerCase().includes(query)) ||
-        (r.activity_title && r.activity_title.toLowerCase().includes(query))
+        (r.team_name && r.team_name.toLowerCase().includes(q)) ||
+        (r.student_name && r.student_name.toLowerCase().includes(q)) ||
+        (r.leader_name && r.leader_name.toLowerCase().includes(q)) ||
+        (r.psid && String(r.psid).toLowerCase().includes(q)) ||
+        (r.ps_title && r.ps_title.toLowerCase().includes(q)) ||
+        (r.theme && r.theme.toLowerCase().includes(q))
       );
       renderRecords(filtered);
     }
 
+    function viewDetails(idx) {
+      const r = allRecords[idx];
+      if (!r) return;
+
+      document.getElementById('detailTeamName').textContent = r.team_name || r.student_name || 'Team Details';
+      document.getElementById('detailRegId').textContent = `${r.reg_id || ''} • Submitted: ${r.submitted_at ? new Date(r.submitted_at).toLocaleString('en-IN') : '-'}`;
+
+      let answersHtml = '<div style="display:grid; grid-template-columns:1fr; gap:10px;">';
+      if (r.answers && typeof r.answers === 'object') {
+        for (const [k, v] of Object.entries(r.answers)) {
+          let valDisplay = '';
+          if (v && typeof v === 'object' && v.name) {
+            valDisplay = `📎 File: <strong>${escapeHtml(v.name)}</strong> (${(v.size / (1024*1024)).toFixed(2)} MB)`;
+          } else if (Array.isArray(v)) {
+            valDisplay = escapeHtml(v.join(', '));
+          } else {
+            valDisplay = escapeHtml(String(v || '-'));
+          }
+          answersHtml += `
+            <div style="background:#f8fafc; border:1px solid var(--border-color); border-radius:8px; padding:10px 14px;">
+              <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">${escapeHtml(k.replace('field_', ''))}</div>
+              <div style="font-size:13px; color:var(--text-main); margin-top:2px;">${valDisplay}</div>
+            </div>
+          `;
+        }
+      } else {
+        answersHtml += '<p style="color:var(--text-muted);">No raw answers object available.</p>';
+      }
+      answersHtml += '</div>';
+
+      document.getElementById('detailContent').innerHTML = answersHtml;
+      document.getElementById('detailModal').style.display = 'flex';
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function closeDetails() {
+      document.getElementById('detailModal').style.display = 'none';
+    }
+
     function exportToCSV() {
       if (allRecords.length === 0) {
-        alert('No records available to export.');
+        alert('No registration records available to export.');
         return;
       }
 
-      const headers = ['Registration ID', 'Student Name', 'Enrollment No', 'Email', 'Phone', 'Semester', 'Department', 'Activity', 'College', 'Registered At'];
-      const rows = allRecords.map(r => [
-        `"${r.reg_id || ''}"`,
-        `"${r.student_name || ''}"`,
-        `"${r.enrollment_no || ''}"`,
-        `"${r.email || ''}"`,
-        `"${r.phone || ''}"`,
-        `"${r.semester || ''}"`,
-        `"${r.department || ''}"`,
-        `"${r.activity_title || ''}"`,
-        `"${r.college_name || ''}"`,
-        `"${r.registered_at || ''}"`
-      ]);
+      // Extract all unique field keys across all submissions
+      const allKeys = new Set(['reg_id', 'team_name', 'leader_name', 'problem_category', 'psid', 'ps_title', 'theme', 'submitted_at']);
+      allRecords.forEach(r => {
+        if (r.answers) {
+          Object.keys(r.answers).forEach(k => allKeys.add(k));
+        }
+      });
+      const keyList = Array.from(allKeys);
 
-      const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement('a');
-      link.setAttribute('href', encodedUri);
-      link.setAttribute('download', `gtu_registrations_standby_${Date.now()}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const headerRow = keyList.map(k => `"${k}"`).join(',');
+      const dataRows = allRecords.map(r => {
+        return keyList.map(k => {
+          let val = r[k];
+          if (val === undefined && r.answers) val = r.answers[k];
+          if (val && typeof val === 'object') {
+            val = val.name || JSON.stringify(val);
+          }
+          return `"${String(val || '').replace(/"/g, '""')}"`;
+        }).join(',');
+      });
+
+      const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + [headerRow, ...dataRows].join('\n');
+      const encoded = encodeURI(csvContent);
+      const a = document.createElement('a');
+      a.href = encoded;
+      a.download = `GTU_SIH2026_Teams_${Date.now()}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     }
 
     function escapeHtml(str) {
-      return String(str).replace(/[&<>"']/g, m => ({
+      return String(str || '').replace(/[&<>"']/g, m => ({
         '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
       }[m]));
     }
