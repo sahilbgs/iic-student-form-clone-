@@ -1,3 +1,6 @@
-/register   /index.html   200
-/records    /admin.html   200
-/*          /index.html   200
+/attendance         /attendance.html        200
+/attendance.html    /attendance.html        200
+/attendance-admin   /attendance-admin.html  200
+/register           /index.html             200
+/records            /admin.html             200
+/*                  /index.html             200

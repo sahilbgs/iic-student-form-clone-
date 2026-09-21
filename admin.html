@@ -631,7 +631,10 @@
         <i data-lucide="chevron-right" style="width:13px;height:13px;color:var(--text-muted);"></i>
         <span style="color:var(--text-primary); font-weight:700;">Registration Report</span>
       </div>
-      <div class="topbar__status">
+      <div class="topbar__status" style="display:flex; align-items:center; gap:10px;">
+        <a href="attendance-admin.html" style="background:rgba(16,185,129,0.12); color:#047857; border:1px solid rgba(16,185,129,0.3); border-radius:9999px; padding:4px 12px; font-size:11.5px; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:5px;">
+          <i data-lucide="check-square" style="width:13px;height:13px;"></i> SIH Attendance Manager
+        </a>
         <span class="status-indicator-pill">
           <span class="pulse-dot"></span> Cloud Standby Active
         </span>
@@ -654,6 +657,11 @@
       <div>
         <h1 class="page-title">Student Registration Report — Internal Hackathon: GTU-ITR(SIH2026)</h1>
         <p class="page-subtitle">Real-time submissions ledger synchronized directly with Google Firebase Firestore Cloud Mirror.</p>
+      </div>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <a href="attendance-admin.html" class="btn btn--primary" style="background:linear-gradient(135deg, #10b981 0%, #059669 100%); border:none; box-shadow:0 4px 12px rgba(16,185,129,0.3); text-decoration:none;">
+          <i data-lucide="check-circle" style="width:15px;height:15px;"></i> SIH Attendance &amp; Selfie Manager
+        </a>
       </div>
     </div>
 
@@ -974,7 +982,7 @@
       const psid = r.psid || answers["field_field_1788437197832_18"] || answers["field_1788437197832_18"] || "-";
       const psTitle = r.ps_title || answers["field_field_1788437260250_19"] || answers["field_1788437260250_19"] || "-";
       const theme = r.theme || answers["field_field_1788437366313_21"] || answers["field_1788437366313_21"] || "Smart Automation";
-      const enrollment = r.enrollment_no || answers["enrollment_no"] || answers["field_enrollment_no"] || "REG-" + Math.floor(100000 + Math.random()*900000);
+      const enrollment = r.enrollment_no || answers["field_field_1788437569088_25"] || answers["field_1788437569088_25"] || answers["enrollment_no"] || answers["field_enrollment_no"] || "-";
 
       return {
         ...r,
@@ -1145,20 +1153,83 @@
       body.appendChild(createFieldCard("Selected Theme", r.theme));
       body.appendChild(createFieldCard("Problem Statement Title", r.ps_title, "full"));
 
+      const FIELD_LABELS = {
+        "student_name": "Team Name",
+        "field_1788437127088_17": "Problem Statement Category",
+        "field_1788437197832_18": "PSID Number",
+        "field_1788437260250_19": "Problem Statement Title",
+        "field_1788437300803_20": "Organization (PSID)",
+        "field_1788437366313_21": "Hackathon Theme",
+        "field_1788437462474_22": "Name of Team Leader",
+        "field_1788437468837_23": "Gender (Team Leader)",
+        "field_1788437569088_25": "Enrollment Number (Team Leader)",
+        "field_1788437598077_26": "Branch (Team Leader)",
+        "semester": "Current Semester",
+        "field_semester": "Current Semester",
+        "field_1788437675426_28": "Email id (Team Leader)",
+        "field_1788437682339_29": "Mobile No (Team Leader)",
+        "field_1788437846753_24": "Name of Team Member-1",
+        "field_1788437852242_25": "Gender (Team Member-1)",
+        "field_1788437857194_26": "Enrollment Number (Team Member-1)",
+        "field_1788437861942_27": "Branch (Team Member-1)",
+        "field_sem_member_1": "Semester (Team Member-1)",
+        "field_1788437873103_29": "Program (Team Member 1)",
+        "field_1788437881221_30": "Email id (Team Member-1)",
+        "field_1788437883624_31": "Mobile No (Team Member-1)",
+        "field_1788438135311_32": "Name of Team Member-2",
+        "field_1788438139669_33": "Gender (Team Member-2)",
+        "field_1788438144244_34": "Enrollment Number (Team Member-2)",
+        "field_1788438149235_35": "Branch (Team Member-2)",
+        "field_sem_member_2": "Semester (Team Member-2)",
+        "field_1788438161907_37": "Program (Team Member 2)",
+        "field_1788438165404_38": "Email id (Team Member-2)",
+        "field_1788438168238_39": "Mobile No (Team Member-2)",
+        "field_1788438177020_40": "Name of Team Member-3",
+        "field_1788438179178_41": "Gender (Team Member-3)",
+        "field_1788438183372_42": "Enrollment Number (Team Member-3)",
+        "field_1788438186681_43": "Branch (Team Member-3)",
+        "field_sem_member_3": "Semester (Team Member-3)",
+        "field_1788438199399_45": "Program (Team Member 3)",
+        "field_1788438203017_46": "Email id (Team Member-3)",
+        "field_1788438203714_47": "Mobile No (Team Member-3)",
+        "field_1788438802004_48": "Name of Team Member-4",
+        "field_1788438804446_49": "Gender (Team Member-4)",
+        "field_1788438807317_50": "Enrollment Number (Team Member-4)",
+        "field_1788438809711_51": "Branch (Team Member-4)",
+        "field_sem_member_4": "Semester (Team Member-4)",
+        "field_1788438816097_53": "Program (Team Member 4)",
+        "field_1788438819218_54": "Email id (Team Member-4)",
+        "field_1788438822857_55": "Mobile No (Team Member-4)",
+        "field_1788438824499_56": "Name of Team Member-5",
+        "field_1788438832292_57": "Gender (Team Member-5)",
+        "field_1788438835695_58": "Enrollment Number (Team Member-5)",
+        "field_1788438839561_59": "Branch (Team Member-5)",
+        "field_sem_member_5": "Semester (Team Member 5)",
+        "field_1788438855303_61": "Program (Team Member 5)",
+        "field_1788438858868_62": "Email id (Team Member-5)",
+        "field_1788438862686_63": "Mobile No (Team Member-5)",
+        "field_1788438865769_64": "Faculty Mentor-1 Name",
+        "field_1788438869876_65": "Faculty Mentor-1 Contact No",
+        "field_1788438873380_66": "Faculty Mentor-1 Email ID",
+        "field_1788438874350_67": "Gender of Faculty Mentor-1",
+        "field_1788438878238_68": "Faculty Mentor-2 Name",
+        "field_1788438882176_69": "Faculty Mentor-2 Mobile No",
+        "field_1788438886869_70": "Faculty Mentor-2 Email id",
+        "field_1788438887822_71": "Gender of Faculty Mentor-2",
+        "field_1788439249733_72": "Idea Presentation File"
+      };
+
       if (r.answers && typeof r.answers === "object") {
         for (const [k, v] of Object.entries(r.answers)) {
-          if (["student_name", "field_student_name", "reg_id"].includes(k)) continue;
+          if (["student_name", "field_student_name", "reg_id", "privacy_consent"].includes(k)) continue;
 
-          let label = k.replace(/^field_field_\d+_\d+/, "").replace(/^field_/, "").replace(/_/g, " ");
-          if (label === "1788437127088 17") label = "Problem Category";
-          else if (label === "1788437197832 18") label = "Problem Statement ID (PSID)";
-          else if (label === "1788437260250 19") label = "Problem Statement Title";
-          else if (label === "1788437366313 21") label = "Hackathon Theme";
-          else if (label === "1788437462474 22") label = "Team Leader Name";
-          else if (label === "1788437512345 23") label = "Leader Email Address";
-          else if (label === "1788437554321 24") label = "Leader Mobile Phone";
-          else if (label === "1788437599999 25") label = "Department";
-          else if (label === "1788437644444 26") label = "Current Semester";
+          let cleanKey = k;
+          if (cleanKey.startsWith("field_field_")) cleanKey = cleanKey.substring(6);
+
+          let label = FIELD_LABELS[cleanKey] || FIELD_LABELS[k];
+          if (!label) {
+            label = cleanKey.replace(/^field_/, "").replace(/_/g, " ");
+          }
 
           if (v && typeof v === "object" && v.name) {
             body.appendChild(createFieldCard(label, v, "file"));

@@ -1,0 +1,1854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SIH 2026 — Team Attendance & Group Selfie Portal | GTU-ITR IIC</title>
+  
+  <!-- Modern Typography & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <!-- Firebase v10 Compat SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js"></script>
+
+  <style>
+    :root {
+      --primary: #0f52ba;
+      --primary-rgb: 15, 82, 186;
+      --primary-hover: #1e3a8a;
+      --primary-light: rgba(15, 82, 186, 0.08);
+      --success: #10b981;
+      --success-rgb: 16, 185, 129;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --bg-body: #f8fafc;
+      --bg-card: #ffffff;
+      --bg-surface-hover: #f1f5f9;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --border-focus: #0f52ba;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
+      --shadow-md: 0 10px 25px -5px rgba(15, 82, 186, 0.08), 0 8px 10px -6px rgba(15, 82, 186, 0.04);
+      --shadow-lg: 0 20px 35px -10px rgba(15, 82, 186, 0.12), 0 10px 15px -5px rgba(0, 0, 0, 0.04);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: radial-gradient(at 10% 15%, rgba(15, 82, 186, 0.06) 0px, transparent 50%),
+                  radial-gradient(at 90% 85%, rgba(99, 102, 241, 0.06) 0px, transparent 50%),
+                  radial-gradient(at 50% 50%, rgba(16, 185, 129, 0.04) 0px, transparent 60%),
+                  var(--bg-body);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 60px;
+    }
+
+    .container {
+      max-width: 760px;
+      width: 100%;
+    }
+
+    /* Top Institutional Bar */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      padding: 10px 16px;
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      box-shadow: var(--shadow-sm);
+    }
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .topbar-left a {
+      color: var(--primary);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .topbar-left a:hover { text-decoration: underline; }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+      animation: pulse 1.8s infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+      70% { box-shadow: 0 0 0 7px rgba(16, 185, 129, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    /* Brand Header */
+    .brand-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .brand-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 14px;
+      border-radius: 9999px;
+      background: rgba(15, 82, 186, 0.08);
+      border: 1px solid rgba(15, 82, 186, 0.2);
+      color: var(--primary);
+      font-size: 11.5px;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .main-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.85rem;
+      font-weight: 900;
+      color: var(--text-main);
+      line-height: 1.25;
+      letter-spacing: -0.02em;
+    }
+    .main-subtitle {
+      font-size: 13.5px;
+      color: var(--text-muted);
+      margin-top: 6px;
+      line-height: 1.5;
+    }
+
+    /* Card System */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: var(--shadow-md);
+      margin-bottom: 20px;
+      transition: all 0.2s ease;
+    }
+    .card--highlight {
+      border-color: rgba(15, 82, 186, 0.3);
+      box-shadow: 0 12px 30px -5px rgba(15, 82, 186, 0.1);
+    }
+
+    /* Team Banner */
+    .team-banner {
+      background: linear-gradient(135deg, #0f52ba 0%, #1e3a8a 100%);
+      color: #ffffff;
+      border-radius: 16px;
+      padding: 20px 24px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow-md);
+      position: relative;
+      overflow: hidden;
+    }
+    .team-banner::after {
+      content: '';
+      position: absolute;
+      right: -30px;
+      bottom: -30px;
+      width: 140px;
+      height: 140px;
+      background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+    .team-banner__header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .team-banner__name {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      line-height: 1.2;
+    }
+    .team-banner__badge {
+      background: rgba(255, 255, 255, 0.18);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 11.5px;
+      font-weight: 700;
+      font-family: monospace;
+      letter-spacing: 0.04em;
+    }
+    .team-banner__meta {
+      margin-top: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 12.5px;
+      color: rgba(255, 255, 255, 0.9);
+    }
+    .team-banner__meta-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(0, 0, 0, 0.15);
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+
+    /* Section Header */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .section-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .counter-pill {
+      background: rgba(16, 185, 129, 0.12);
+      color: #065f46;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    /* Member Attendance Cards */
+    .member-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .member-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      background: #ffffff;
+      border: 1.5px solid var(--border-color);
+      border-radius: 14px;
+      padding: 14px 18px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      cursor: pointer;
+      user-select: none;
+    }
+    .member-card:hover {
+      border-color: rgba(15, 82, 186, 0.4);
+      background: #fafcff;
+    }
+    .member-card.is-present {
+      border-color: #10b981;
+      background: rgba(16, 185, 129, 0.03);
+    }
+    .member-card.is-absent {
+      border-color: #fca5a5;
+      background: rgba(239, 68, 68, 0.03);
+      opacity: 0.85;
+    }
+    .member-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      min-width: 0;
+    }
+    .member-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 15px;
+      color: #ffffff;
+      background: #0f52ba;
+      flex-shrink: 0;
+      box-shadow: 0 3px 8px rgba(15, 82, 186, 0.25);
+    }
+    .member-avatar--leader {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      box-shadow: 0 3px 8px rgba(245, 158, 11, 0.3);
+    }
+    .member-details {
+      min-width: 0;
+      flex: 1;
+    }
+    .member-name {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .role-badge {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border-radius: 6px;
+      letter-spacing: 0.03em;
+    }
+    .role-badge--leader {
+      background: rgba(245, 158, 11, 0.15);
+      color: #b45309;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+    .role-badge--member {
+      background: rgba(15, 82, 186, 0.1);
+      color: var(--primary);
+    }
+    .member-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+      font-family: monospace;
+    }
+
+    /* Presence Toggle Button */
+    .presence-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 12.5px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      border: 1.5px solid transparent;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+    .presence-toggle--present {
+      background: #10b981;
+      color: #ffffff;
+      box-shadow: 0 3px 10px rgba(16, 185, 129, 0.3);
+    }
+    .presence-toggle--absent {
+      background: #f1f5f9;
+      color: #64748b;
+      border-color: #cbd5e1;
+    }
+    .member-card.is-absent .presence-toggle--absent {
+      background: #ef4444;
+      color: #ffffff;
+      border-color: #ef4444;
+      box-shadow: 0 3px 10px rgba(239, 68, 68, 0.3);
+    }
+
+    /* Quick Action Buttons */
+    .quick-actions-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .btn-quick {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-main);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+    .btn-quick:hover {
+      background: var(--bg-surface-hover);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    /* Group Selfie Upload Area */
+    .selfie-box {
+      border: 2px dashed var(--border-color);
+      border-radius: 16px;
+      padding: 24px 20px;
+      text-align: center;
+      background: #fbfcfe;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+    .selfie-box.has-image {
+      border-style: solid;
+      border-color: #10b981;
+      background: rgba(16, 185, 129, 0.02);
+      padding: 16px;
+    }
+    .selfie-icon-circle {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: rgba(15, 82, 186, 0.08);
+      color: var(--primary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+    }
+    .selfie-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+    .btn-camera {
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 18px;
+      font-size: 13.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(15, 82, 186, 0.25);
+      transition: all 0.2s ease;
+    }
+    .btn-camera:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+    }
+    .btn-gallery {
+      background: #ffffff;
+      color: var(--text-main);
+      border: 1.5px solid var(--border-color);
+      border-radius: 10px;
+      padding: 10px 18px;
+      font-size: 13.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+    .btn-gallery:hover {
+      background: var(--bg-surface-hover);
+      border-color: var(--text-muted);
+    }
+
+    /* Selfie Preview */
+    .selfie-preview-container {
+      display: none;
+      position: relative;
+      border-radius: 12px;
+      overflow: hidden;
+      max-width: 480px;
+      margin: 0 auto;
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--border-color);
+    }
+    .selfie-preview-img {
+      width: 100%;
+      max-height: 380px;
+      object-fit: cover;
+      display: block;
+    }
+    .selfie-watermark {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 70%, transparent 100%);
+      color: #ffffff;
+      padding: 16px 14px 10px;
+      font-size: 11.5px;
+      text-align: left;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+    .selfie-action-bar {
+      margin-top: 12px;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+    .btn-retake {
+      background: rgba(239, 68, 68, 0.1);
+      color: #b91c1c;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-retake:hover {
+      background: rgba(239, 68, 68, 0.2);
+    }
+
+    /* Submit Button */
+    .btn-submit {
+      width: 100%;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #ffffff;
+      border: none;
+      border-radius: 14px;
+      padding: 16px 24px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 8px 25px -4px rgba(16, 185, 129, 0.4);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      margin-top: 24px;
+    }
+    .btn-submit:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px -4px rgba(16, 185, 129, 0.5);
+    }
+    .btn-submit:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      filter: grayscale(0.5);
+    }
+
+    /* Team Selector Modal / Grid (when opened without ?team=) */
+    .team-picker-card {
+      background: #ffffff;
+      border: 1.5px solid var(--border-color);
+      border-radius: 14px;
+      padding: 16px 18px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      text-decoration: none;
+      color: inherit;
+    }
+    .team-picker-card:hover {
+      border-color: var(--primary);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+      background: #fafcff;
+    }
+
+    /* Success Screen Modal */
+    .success-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .success-overlay.open {
+      display: flex;
+      animation: fadeIn 0.3s ease;
+    }
+    .success-card {
+      background: #ffffff;
+      border-radius: 20px;
+      max-width: 520px;
+      width: 100%;
+      padding: 30px 24px;
+      text-align: center;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+      animation: scaleUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes scaleUp {
+      from { opacity: 0; transform: scale(0.92); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .btn-whatsapp-forward {
+      background: #25D366;
+      color: #ffffff;
+      border: none;
+      border-radius: 12px;
+      padding: 14px 20px;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      text-decoration: none;
+      box-shadow: 0 6px 20px rgba(37, 211, 102, 0.35);
+      margin-top: 14px;
+      transition: all 0.2s ease;
+    }
+    .btn-whatsapp-forward:hover {
+      background: #20bd5a;
+      transform: translateY(-1px);
+    }
+
+    /* Live Camera Modal */
+    .camera-modal {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.92);
+      z-index: 1100;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .camera-modal.open {
+      display: flex;
+    }
+    .camera-feed-container {
+      position: relative;
+      width: 100%;
+      max-width: 460px;
+      border-radius: 16px;
+      overflow: hidden;
+      background: #000;
+      aspect-ratio: 4/3;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+    }
+    #cameraVideo {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1); /* mirror preview for selfie */
+    }
+    .camera-controls {
+      display: flex;
+      gap: 16px;
+      margin-top: 20px;
+      align-items: center;
+    }
+    .btn-snap {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 5px solid rgba(255,255,255,0.4);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 20px rgba(255,255,255,0.3);
+      transition: all 0.15s ease;
+    }
+    .btn-snap:hover { transform: scale(1.05); }
+    .btn-snap:active { transform: scale(0.95); background: #e2e8f0; }
+    .btn-snap-inner {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: var(--primary);
+    }
+    .btn-close-cam {
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      body { padding: 12px 10px 40px; }
+      .main-title { font-size: 1.45rem; }
+      .card { padding: 16px; border-radius: 14px; }
+      .member-card { padding: 12px; gap: 10px; }
+      .member-avatar { width: 36px; height: 36px; font-size: 13px; }
+      .presence-toggle { padding: 6px 10px; font-size: 11.5px; }
+      .team-banner { padding: 16px; }
+      .team-banner__name { font-size: 1.35rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <!-- Top Bar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <a href="index.html">
+          <i data-lucide="arrow-left" style="width:14px;height:14px;"></i> GTU-ITR Portal
+        </a>
+        <span style="color:var(--border-color);">|</span>
+        <a href="admin.html" style="color:var(--text-muted); font-weight:500;">
+          <i data-lucide="shield" style="width:13px;height:13px;"></i> Admin
+        </a>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px; font-size:12px; font-weight:700; color:var(--success);">
+        <span class="pulse-dot"></span>
+        <span id="cloudStatusText">Firestore Live</span>
+      </div>
+    </header>
+
+    <!-- Brand Header -->
+    <div class="brand-header">
+      <div class="brand-pill">
+        <i data-lucide="award" style="width:14px;height:14px;"></i>
+        Smart India Hackathon (SIH 2026) • IIC Cell
+      </div>
+      <h1 class="main-title">Internal Hackathon Attendance</h1>
+      <p class="main-subtitle">Mark present team members &amp; upload your team's live hackathon group selfie.</p>
+    </div>
+
+    <!-- VIEW 1: TEAM SELECTOR (Shown if no ?team= parameter provided) -->
+    <div id="teamSelectorView" style="display:none;">
+      <div class="card card--highlight">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i data-lucide="users" style="width:20px;height:20px;color:var(--primary);"></i>
+            Select Your Registered Team
+          </h2>
+          <span style="font-size:12px; color:var(--text-muted);">9 Teams Registered</span>
+        </div>
+        <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">
+          Search by Team Name, Leader Name, or Registration ID to open your team's dedicated attendance form:
+        </p>
+
+        <!-- Search input -->
+        <div style="position:relative; margin-bottom:16px;">
+          <i data-lucide="search" style="position:absolute; left:12px; top:11px; width:16px; height:16px; color:var(--text-muted);"></i>
+          <input type="text" id="teamSearchInput" placeholder="Search team name, leader, or enrollment..." 
+            oninput="filterTeamPicker()"
+            style="width:100%; padding:10px 12px 10px 38px; border-radius:10px; border:1.5px solid var(--border-color); font-size:14px; outline:none; font-family:inherit;">
+        </div>
+
+        <!-- Team Cards Grid -->
+        <div id="teamPickerGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:12px;">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW 2: TEAM ATTENDANCE FORM (Shown when team is selected or ?team= is passed) -->
+    <div id="teamAttendanceView" style="display:none;">
+
+      <!-- Team Banner -->
+      <div class="team-banner">
+        <div class="team-banner__header">
+          <div>
+            <div style="font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:0.06em; opacity:0.85; margin-bottom:4px;">
+              PARTICIPATING TEAM
+            </div>
+            <h2 class="team-banner__name" id="bannerTeamName">Team Name</h2>
+          </div>
+          <span class="team-banner__badge" id="bannerRegId">REG-SIH-000000</span>
+        </div>
+
+        <div class="team-banner__meta">
+          <div class="team-banner__meta-item">
+            <i data-lucide="user" style="width:13px;height:13px;"></i>
+            <span>Leader: <strong id="bannerLeaderName">-</strong></span>
+          </div>
+          <div class="team-banner__meta-item">
+            <i data-lucide="hash" style="width:13px;height:13px;"></i>
+            <span>PSID: <strong id="bannerPsid">-</strong></span>
+          </div>
+          <div class="team-banner__meta-item" id="bannerThemeWrap">
+            <i data-lucide="tag" style="width:13px;height:13px;"></i>
+            <span id="bannerTheme">Smart Automation</span>
+          </div>
+        </div>
+
+        <div style="margin-top:12px; font-size:12px; opacity:0.9; line-height:1.4; border-top:1px solid rgba(255,255,255,0.2); padding-top:10px;" id="bannerPsTitle">
+          Problem Statement Title
+        </div>
+
+        <div style="margin-top:10px; display:flex; justify-content:flex-end;">
+          <a href="attendance.html" style="color:rgba(255,255,255,0.85); font-size:11.5px; text-decoration:underline;">
+            Not your team? Switch Team
+          </a>
+        </div>
+      </div>
+
+      <!-- ALREADY MARKED ATTENDANCE BANNER (If already submitted) -->
+      <div id="alreadyMarkedAlert" style="display:none; background:#ecfdf5; border:1.5px solid #10b981; border-radius:14px; padding:16px 20px; margin-bottom:20px;">
+        <div style="display:flex; align-items:center; gap:10px; color:#065f46; font-weight:800; font-size:14px;">
+          <i data-lucide="check-circle-2" style="width:20px;height:20px;color:#10b981;"></i>
+          Attendance Already Submitted For This Team!
+        </div>
+        <p style="font-size:12.5px; color:#047857; margin-top:4px;" id="alreadyMarkedDetails">
+          Submitted on 21 Sep 2026. You can review your submission below or forward it again to the organizer.
+        </p>
+        <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+          <button type="button" class="btn-quick" onclick="forwardExistingAttendance()" style="background:#25D366; color:#fff; border-color:#25D366;">
+            <i data-lucide="share-2" style="width:13px;height:13px;"></i> Forward on WhatsApp (+91 9978309254)
+          </button>
+          <button type="button" class="btn-quick" onclick="enableReEdit()">
+            <i data-lucide="edit-3" style="width:13px;height:13px;"></i> Edit / Re-submit Attendance
+          </button>
+        </div>
+      </div>
+
+      <!-- FORM -->
+      <form id="attendanceForm" onsubmit="handleAttendanceSubmit(event)">
+
+        <!-- SECTION 1: MAKE PRESENT (MEMBERS LIST) -->
+        <div class="card">
+          <div class="section-header">
+            <h3 class="section-title">
+              <i data-lucide="user-check" style="width:20px;height:20px;color:var(--primary);"></i>
+              1. Mark Attendance ("Make Present")
+            </h3>
+            <span class="counter-pill" id="presenceCounter">6 / 6 Present</span>
+          </div>
+
+          <p style="font-size:12.5px; color:var(--text-muted); margin-bottom:14px;">
+            Click any member to toggle between <strong style="color:var(--success);">PRESENT</strong> and <strong style="color:var(--danger);">ABSENT</strong>:
+          </p>
+
+          <div class="quick-actions-row">
+            <button type="button" class="btn-quick" onclick="setAllPresence(true)">
+              <i data-lucide="check-check" style="width:13px;height:13px;color:var(--success);"></i> Mark All Present
+            </button>
+            <button type="button" class="btn-quick" onclick="setAllPresence(false)">
+              <i data-lucide="x" style="width:13px;height:13px;color:var(--danger);"></i> Mark All Absent
+            </button>
+          </div>
+
+          <!-- Member list container -->
+          <div class="member-list" id="memberListContainer">
+            <!-- Injected via JS -->
+          </div>
+        </div>
+
+        <!-- SECTION 2: GROUP SELFIE UPLOAD -->
+        <div class="card">
+          <div class="section-header">
+            <h3 class="section-title">
+              <i data-lucide="camera" style="width:20px;height:20px;color:var(--primary);"></i>
+              2. Upload Team Group Selfie
+            </h3>
+            <span style="font-size:11px; font-weight:800; color:var(--danger); background:rgba(239,68,68,0.1); padding:2px 8px; border-radius:6px;">
+              MANDATORY
+            </span>
+          </div>
+
+          <p style="font-size:12.5px; color:var(--text-muted); margin-bottom:16px;">
+            Please capture or upload a clear group selfie of all attending team members at the hackathon venue.
+          </p>
+
+          <!-- Upload Box / Actions -->
+          <div class="selfie-box" id="selfieUploadBox">
+            <div id="selfiePromptArea">
+              <div class="selfie-icon-circle">
+                <i data-lucide="camera" style="width:28px;height:28px;"></i>
+              </div>
+              <h4 style="font-size:15px; font-weight:700; color:var(--text-main); margin-bottom:4px;">
+                Take or Upload Group Selfie
+              </h4>
+              <p style="font-size:12px; color:var(--text-muted); max-width:320px; margin:0 auto;">
+                Make sure all present team members are clearly visible in the photo.
+              </p>
+
+              <div class="selfie-buttons">
+                <button type="button" class="btn-camera" onclick="openLiveCamera()">
+                  <i data-lucide="camera" style="width:16px;height:16px;"></i> Live Camera Snap
+                </button>
+                <label class="btn-gallery">
+                  <i data-lucide="image" style="width:16px;height:16px;"></i> Upload From Device
+                  <input type="file" id="selfieFileInput" accept="image/*" capture="user" style="display:none;" onchange="handleSelfieFileSelect(this)">
+                </label>
+              </div>
+            </div>
+
+            <!-- Preview Card (shown once image is selected) -->
+            <div class="selfie-preview-container" id="selfiePreviewContainer">
+              <img id="selfiePreviewImg" class="selfie-preview-img" src="" alt="Group Selfie Preview">
+              <div class="selfie-watermark">
+                <div>
+                  <div style="font-weight:800; font-size:12.5px;" id="watermarkTeam">Team Name</div>
+                  <div style="font-size:10.5px; opacity:0.9;" id="watermarkTimestamp">Sep 21, 2026</div>
+                </div>
+                <div style="text-align:right;">
+                  <span style="background:rgba(16,185,129,0.85); font-size:10px; font-weight:800; padding:2px 6px; border-radius:4px;">
+                    VERIFIED
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="selfie-action-bar" id="selfieActionBar" style="display:none;">
+              <button type="button" class="btn-retake" onclick="resetSelfie()">
+                <i data-lucide="refresh-cw" style="width:12px;height:12px;"></i> Retake / Change Photo
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 3: REPORTING REMARKS / NOTES -->
+        <div class="card">
+          <div class="section-header">
+            <h3 class="section-title">
+              <i data-lucide="message-square" style="width:20px;height:20px;color:var(--primary);"></i>
+              3. Venue / Reporting Remarks (Optional)
+            </h3>
+          </div>
+          <input type="text" id="attendanceRemarks" placeholder="E.g., Reporting from Computer Lab-2 / All 6 members present with laptops..."
+            style="width:100%; padding:11px 14px; border-radius:10px; border:1.5px solid var(--border-color); font-size:13px; font-family:inherit; outline:none;">
+        </div>
+
+        <!-- SUBMIT BUTTON -->
+        <button type="submit" id="submitAttendanceBtn" class="btn-submit">
+          <i data-lucide="check-circle-2" style="width:22px;height:22px;"></i>
+          <span>Submit Team Attendance</span>
+        </button>
+
+      </form>
+    </div>
+
+  </div>
+
+  <!-- LIVE CAMERA STREAM MODAL -->
+  <div class="camera-modal" id="cameraModal">
+    <div class="camera-feed-container">
+      <video id="cameraVideo" autoplay playsinline muted></video>
+      <canvas id="cameraCanvas" style="display:none;"></canvas>
+    </div>
+    <div class="camera-controls">
+      <button type="button" class="btn-close-cam" onclick="closeLiveCamera()" title="Cancel">
+        <i data-lucide="x" style="width:20px;height:20px;"></i>
+      </button>
+      <button type="button" class="btn-snap" onclick="captureLiveSnapshot()" title="Capture Photo">
+        <div class="btn-snap-inner"></div>
+      </button>
+      <button type="button" class="btn-close-cam" onclick="switchCameraFacing()" title="Flip Camera">
+        <i data-lucide="flip-horizontal" style="width:20px;height:20px;"></i>
+      </button>
+    </div>
+    <p style="color:#ffffff; font-size:12px; margin-top:14px; opacity:0.8;">Tap the white circle to take your group selfie</p>
+  </div>
+
+  <!-- SUCCESS CONFIRMATION MODAL WITH 1-CLICK WHATSAPP FORWARD -->
+  <div class="success-overlay" id="successModal">
+    <div class="success-card">
+      <div style="width:68px; height:68px; border-radius:50%; background:rgba(16,185,129,0.12); color:#10b981; display:inline-flex; align-items:center; justify-content:center; margin-bottom:14px;">
+        <i data-lucide="check-circle" style="width:40px;height:40px;"></i>
+      </div>
+
+      <h2 style="font-family:'Outfit',sans-serif; font-size:1.6rem; font-weight:800; color:var(--text-main); margin-bottom:6px;">
+        Attendance Recorded!
+      </h2>
+      <p style="font-size:13px; color:var(--text-muted); line-height:1.5; margin-bottom:18px;">
+        Your team attendance and group selfie have been synchronized directly with the GTU-ITR IIC Cloud.
+      </p>
+
+      <!-- Attendance Summary Pill Box -->
+      <div style="background:var(--bg-surface-hover); border:1px solid var(--border-color); border-radius:12px; padding:14px; text-align:left; font-size:12.5px; margin-bottom:16px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+          <span style="color:var(--text-muted);">Team Name:</span>
+          <strong id="modalTeamName" style="color:var(--primary);">-</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+          <span style="color:var(--text-muted);">Leader:</span>
+          <strong id="modalLeaderName">-</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+          <span style="color:var(--text-muted);">Presence Status:</span>
+          <strong id="modalPresenceStatus" style="color:var(--success);">-</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between;">
+          <span style="color:var(--text-muted);">Recorded At:</span>
+          <span id="modalTimestamp" style="font-family:monospace; font-weight:600;">-</span>
+        </div>
+      </div>
+
+      <!-- Prominent 1-Click WhatsApp Forward to Admin -->
+      <a id="whatsappForwardBtn" href="#" target="_blank" class="btn-whatsapp-forward">
+        <i data-lucide="send" style="width:18px;height:18px;"></i>
+        Forward Attendance to Organizer (+91 9978309254)
+      </a>
+
+      <button type="button" class="btn-quick" onclick="copyAttendanceSummary()" style="width:100%; justify-content:center; margin-top:10px; padding:10px;">
+        <i data-lucide="copy" style="width:14px;height:14px;"></i> Copy Summary to Clipboard
+      </button>
+
+      <button type="button" onclick="closeSuccessModal()" style="margin-top:16px; background:none; border:none; color:var(--text-muted); font-size:13px; cursor:pointer; font-weight:600;">
+        Close &amp; Return to Home
+      </button>
+    </div>
+  </div>
+
+  <!-- SCRIPT LOGIC -->
+  <script>
+    // -------------------------------------------------------------------------
+    // MASTER REGISTERED SIH TEAMS DATA (9 Registered Teams from Firestore)
+    // -------------------------------------------------------------------------
+    const SEEDED_SIH_TEAMS = [
+      {
+        reg_id: "REG-SIH-401995",
+        team_name: "Memory Bond",
+        leader_name: "Atik Saiyad",
+        leader_phone: "8734907574",
+        psid: "26003",
+        ps_title: "Ministry of Development of North Eastern Region (MDoNER)",
+        theme: "MedTech / BioTech / HealthTech",
+        category: "Software",
+        members: [
+          { role: "Team Leader", is_leader: true, name: "Atik Saiyad", enrollment: "2628", branch: "Computer Engineering Diploma" },
+          { role: "Member 1", is_leader: false, name: "Ayusha Samal", enrollment: "2630", branch: "Computer Engineering Diploma" },
+          { role: "Member 2", is_leader: false, name: "Krisha Rathod", enrollment: "2601", branch: "Computer Engineering Diploma" },
+          { role: "Member 3", is_leader: false, name: "Gresika Parihar", enrollment: "2624", branch: "Computer Engineering Diploma" },
+          { role: "Member 4", is_leader: false, name: "Rasul Mir", enrollment: "2604", branch: "Computer Engineering Diploma" },
+          { role: "Member 5", is_leader: false, name: "Aryan Rajpurohit", enrollment: "2629", branch: "Computer Engineering Diploma" }
+        ]
+      },
+      {
+        reg_id: "REG-LOCAL-0001",
+        team_name: "MJD",
+        leader_name: "MAHI P KARNAKE",
+        leader_phone: "8347021911",
+        psid: "26046",
+        ps_title: "Patient case taking software",
+        theme: "MedTech / BioTech / HealthTech",
+        category: "Software",
+        members: [
+          { role: "Team Leader", is_leader: true, name: "MAHI P KARNAKE", enrollment: "254600307010", branch: "Computer engineering" },
+          { role: "Member 2", is_leader: false, name: "DEVANSHI B PATEL", enrollment: "254600307015", branch: "Computer engineering" },
+          { role: "Member 3", is_leader: false, name: "JANVI M PATEL", enrollment: "254600307016", branch: "Computer engineering" }
+        ]
+      },
+      {
+        reg_id: "REG-LOCAL-0002",
+        team_name: "FindVick",
+        leader_name: "Bhojak Shaury",
+        leader_phone: "8320358636",
+        psid: "26046",
+        ps_title: "Patient case taking software",
+        theme: "MedTech / BioTech / HealthTech",
+        category: "Software",
+        members: [
+          { role: "Team Leader", is_leader: true, name: "Bhojak Shaury", enrollment: "244600307001", branch: "DI-Computer Engineering" },
+          { role: "Member 1", is_leader: false, name: "Gohel Vraj", enrollment: "244600307002", branch: "DI-Computer Engineering" },
+          { role: "Member 2", is_leader: false, name: "Jenil Patel", enrollment: "244600307014", branch: "DI-Computer Engineering" },
+          { role: "Member 3", is_leader: false, name: "Rajput Nihal", enrollment: "244600307028", branch: "DI-Computer Engineering" },
+          { role: "Member 4", is_leader: false, name: "Arya Vaidik", enrollment: "244600307037", branch: "DI-Computer Engineering" },
+          { role: "Member 5", is_leader: false, name: "Patel Hil", enrollment: "244600307011", branch: "DI-Computer Engineering" }
+        ]
+      },
+      {
+        reg_id: "REG-LOCAL-0003",
+        team_name: "Team - NEURO SAHAY",
+        leader_name: "Prajapati Rutvi Narendrakumar",
+        leader_phone: "8866599383",
+        psid: "26003",
+        ps_title: "Development of AI/ML based software solution to automatically screen and detect cancer",
+        theme: "MedTech / BioTech / HealthTech",
+        category: "Software",
+        members: [
+          { role: "Team Leader", is_leader: true, name: "Prajapati Rutvi Narendrakumar", enrollment: "251041305019", branch: "Integreted MSC -IT" },
+          { role: "Member 1", is_leader: false, name: "Thakor sahil rameshji", enrollment: "231040107082", branch: "BE computer" },
+          { role: "Member 2", is_leader: false, name: "Patel Yug Rasikbhai", enrollment: "234600307020", branch: "BE computer" },
+          { role: "Member 3", is_leader: false, name: "Prajapati heli hareshkumar", enrollment: "251041305023", branch: "Integreted MSC -IT" },
+          { role: "Member 4", is_leader: false, name: "Patel Karan PrakashKumar", enrollment: "236310307106", branch: "BE computer" },
+          { role: "Member 5", is_leader: false, name: "Thakor Jensi Baldevji", enrollment: "251041305021", branch: "Integreted MSC -IT" }
+        ]
+      },
+      {
+        reg_id: "REG-LOCAL-0004",
+        team_name: "Thermal Bytes",
+        leader_name: "Rudra Milinkumar Patel",
+        leader_phone: "7016220568",
+        psid: "26003",
+        ps_title: "Ministry of Development of North Eastern Region (MDoNER)",
+        theme: "MedTech / BioTech / HealthTech",
+        category: "Software",
+        members: [
+          { role: "Team Leader", is_leader: true, name: "Rudra Milinkumar Patel", enrollment: "26E020", branch: "Computer Engineering" },
+          { role: "Member 1", is_leader: false, name: "Harshraj Ranjitkumar Thakur", enrollment: "26E017", branch: "Computer Engineering" },
+          { role: "Member 2", is_leader: false, name: "Shifa Mohammadjamil Pathan", enrollment: "26E038", branch: "Computer Engineering" },
+          { role: "Member 3", is_leader: false, name: "Anjukumari Mahendra Kashyap", enrollment: "26E041", branch: "Computer Engineering" },
+          { role: "Member 4", is_leader: false, name: "Yahvi Jigneshkumar Bhavsar", enrollment: "26E023", branch: "Computer Engineering" },
+          { role: "Member 5", is_leader: false, name: "Janvi Mukeshkumar Bhagwani", enrollment: "26E042", branch: "Computer Engineering" }
+        ]
+      },
+      {
+        reg_id: "REG-LOCAL-0005",
+        team_name: "InfraDeveloper",
+        leader_name: "Dwij Chetankumar Bhatt",
+        leader_phone: "+918485925990",
+        psid: "26005",
+        ps_title: "Comprehensive, GIS based multi-criteria decision support system for landslide risk management",
+        theme: "Disaster Management",
+        category: "Software",
+        members: [
+          { role: "Team Leader", is_leader: true, name: "Dwij Chetankumar Bhatt", enrollment: "15", branch: "Civil engineering" },
+          { role: "Member 1", is_leader: false, name: "Gunjan Jigarkumar Darji", enrollment: "19", branch: "Civil engineering" },
+          { role: "Member 2", is_leader: false, name: "Aryan Dineshbhai Chaudhary", enrollment: "04", branch: "Civil engineering" },
+          { role: "Member 3", is_leader: false, name: "Sovik Uttar Sutradhar", enrollment: "27", branch: "Civil engineering" },
+          { role: "Member 4", is_leader: false, name: "Yash Raj", enrollment: "22", branch: "Civil engineering" },
+          { role: "Member 5", is_leader: false, name: "Diya Janardanbhai Gurjar", enrollment: "14", branch: "Civil engineering" }
+        ]
+      },
+      {
+        reg_id: "REG-LOCAL-0006",
+        team_name: "Traffic Trackers",
+        leader_name: "Chaudhari Khushi Jagdishbhai",
+        leader_phone: "76005 95902",
+        psid: "26137",
+        ps_title: "AI-Based Traffic Congestion Prediction and Smart Route Management System for Tier-2 Cities",
+        theme: "Transportation & Logistics",
+        category: "Software",
+        members: [
+          { role: "Team Leader", is_leader: true, name: "Chaudhari Khushi Jagdishbhai", enrollment: "251040107011", branch: "BE - Computer Engineering (07)" },
+          { role: "Member 1", is_leader: false, name: "Chavada Priyaba Parbatsinh", enrollment: "251040107015", branch: "BE - Computer Engineering (07)" },
+          { role: "Member 2", is_leader: false, name: "Patel Shreya Dipakkumar", enrollment: "251040107046", branch: "BE - Computer Engineering (07)" },
+          { role: "Member 3", is_leader: false, name: "Kritika Rao", enrollment: "251040107024", branch: "BE - Computer Engineering (07)" },
+          { role: "Member 4", is_leader: false, name: "Chaudhary Mahi Dineshbhai", enrollment: "251040107012", branch: "BE - Computer Engineering (07)" },
+          { role: "Member 5", is_leader: false, name: "Patel Viya Arvindbhai", enrollment: "251040107048", branch: "BE - Computer Engineering (07)" }
+        ]
+      },
+      {
+        reg_id: "REG-LOCAL-0007",
+        team_name: "LegalMetrix",
+        leader_name: "Shreya Thakkar",
+        leader_phone: "9173861468",
+        psid: "26034",
+        ps_title: "Software System to check compliance of Packaged Commodities under Legal Metrology Rules",
+        theme: "Miscellaneous",
+        category: "Software",
+        members: [
+          { role: "Team Leader", is_leader: true, name: "Shreya Thakkar", enrollment: "241041305037", branch: "B Sc IT" },
+          { role: "Member 1", is_leader: false, name: "DESAI ARYAN V.", enrollment: "241041305006", branch: "B Sc IT" },
+          { role: "Member 2", is_leader: false, name: "THAKKAR JAY M.", enrollment: "241041305036", branch: "B Sc IT" },
+          { role: "Member 3", is_leader: false, name: "BAROT SUJAL M.", enrollment: "241041305001", branch: "B Sc IT" },
+          { role: "Member 4", is_leader: false, name: "PRAJAPATI JAHAN S.", enrollment: "241041305022", branch: "B Sc IT" },
+          { role: "Member 5", is_leader: false, name: "KANSARA HET A.", enrollment: "241041305009", branch: "B Sc IT" }
+        ]
+      },
+      {
+        reg_id: "REG-SIH-232289",
+        team_name: "Mediminds",
+        leader_name: "Patel Bhoomi",
+        leader_phone: "9978732051",
+        psid: "26046",
+        ps_title: "Patient case taking software",
+        theme: "MedTech / BioTech / HealthTech",
+        category: "Software",
+        members: [
+          { role: "Team Leader", is_leader: true, name: "Patel Bhoomi", enrollment: "251040107037", branch: "Computer" },
+          { role: "Member 1", is_leader: false, name: "Patel Pari", enrollment: "251040107034", branch: "Computer" },
+          { role: "Member 2", is_leader: false, name: "Patel Janvi", enrollment: "251040107021", branch: "Computer" },
+          { role: "Member 3", is_leader: false, name: "Patel Aneri", enrollment: "251040107036", branch: "Computer" },
+          { role: "Member 4", is_leader: false, name: "Bhagwani Riya", enrollment: "251040107005", branch: "Computer" },
+          { role: "Member 5", is_leader: false, name: "Yadav Krish", enrollment: "251040107023", branch: "Computer" }
+        ]
+      }
+    ];
+
+    // State Variables
+    let currentTeam = null;
+    let memberPresenceMap = {}; // { [enrollment]: boolean }
+    let capturedSelfieDataUrl = null;
+    let activeMediaStream = null;
+    let cameraFacingMode = "user"; // "user" (front) or "environment" (rear)
+    let adminWhatsAppNumber = "919978309254"; // GTU Organizer WhatsApp
+
+    // -------------------------------------------------------------------------
+    // INITIALIZATION & URL ROUTING
+    // -------------------------------------------------------------------------
+    document.addEventListener("DOMContentLoaded", async () => {
+      if (window.lucide) lucide.createIcons();
+      detectTeamContext();
+    });
+
+    function detectTeamContext() {
+      const params = new URLSearchParams(window.location.search);
+      const teamQuery = params.get("team") || params.get("team_id") || params.get("reg_id") || params.get("id");
+
+      if (teamQuery) {
+        // Try finding matching team by reg_id, team_name, or leader
+        const matched = findTeamByQuery(teamQuery);
+        if (matched) {
+          loadTeamForm(matched);
+          return;
+        }
+      }
+
+      // If no query or not found, show Team Picker View
+      renderTeamPicker(SEEDED_SIH_TEAMS);
+      document.getElementById("teamSelectorView").style.display = "block";
+      document.getElementById("teamAttendanceView").style.display = "none";
+    }
+
+    function findTeamByQuery(query) {
+      const q = String(query).toLowerCase().trim();
+      return SEEDED_SIH_TEAMS.find(t => 
+        t.reg_id.toLowerCase() === q ||
+        t.team_name.toLowerCase() === q ||
+        t.team_name.toLowerCase().includes(q) ||
+        t.leader_name.toLowerCase().includes(q) ||
+        (t.members && t.members.some(m => m.enrollment.toLowerCase() === q))
+      );
+    }
+
+    // -------------------------------------------------------------------------
+    // TEAM PICKER (No link provided)
+    // -------------------------------------------------------------------------
+    function renderTeamPicker(teams) {
+      const grid = document.getElementById("teamPickerGrid");
+      if (!grid) return;
+
+      if (teams.length === 0) {
+        grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:30px; color:var(--text-muted);">No teams match your search.</div>`;
+        return;
+      }
+
+      grid.innerHTML = teams.map(t => `
+        <div class="team-picker-card" onclick="selectTeam('${t.reg_id}')">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <strong style="color:var(--primary); font-size:15px; font-family:'Outfit',sans-serif;">${escapeHtml(t.team_name)}</strong>
+            <span style="font-size:10.5px; font-weight:800; font-family:monospace; background:rgba(15,82,186,0.08); color:var(--primary); padding:2px 6px; border-radius:4px;">
+              ${escapeHtml(t.reg_id)}
+            </span>
+          </div>
+          <div style="font-size:12.5px; color:var(--text-main); font-weight:600; margin-top:2px;">
+            Leader: ${escapeHtml(t.leader_name)}
+          </div>
+          <div style="font-size:11.5px; color:var(--text-muted); display:flex; gap:8px; margin-top:4px;">
+            <span><i data-lucide="users" style="width:12px;height:12px;vertical-align:-1px;"></i> ${t.members.length} Members</span>
+            <span>•</span>
+            <span>PSID: ${escapeHtml(t.psid)}</span>
+          </div>
+        </div>
+      `).join("");
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function filterTeamPicker() {
+      const term = document.getElementById("teamSearchInput").value.toLowerCase().trim();
+      const filtered = SEEDED_SIH_TEAMS.filter(t => 
+        t.team_name.toLowerCase().includes(term) ||
+        t.leader_name.toLowerCase().includes(term) ||
+        t.reg_id.toLowerCase().includes(term) ||
+        t.psid.toLowerCase().includes(term) ||
+        t.members.some(m => m.name.toLowerCase().includes(term) || m.enrollment.toLowerCase().includes(term))
+      );
+      renderTeamPicker(filtered);
+    }
+
+    function selectTeam(regId) {
+      const team = SEEDED_SIH_TEAMS.find(t => t.reg_id === regId);
+      if (team) {
+        // Update URL cleanly without reloading
+        const newUrl = `${window.location.pathname}?team=${encodeURIComponent(team.reg_id)}`;
+        window.history.pushState({ regId: team.reg_id }, "", newUrl);
+        loadTeamForm(team);
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // LOAD TEAM ATTENDANCE FORM
+    // -------------------------------------------------------------------------
+    async function loadTeamForm(team) {
+      currentTeam = team;
+
+      document.getElementById("teamSelectorView").style.display = "none";
+      document.getElementById("teamAttendanceView").style.display = "block";
+
+      // Fill Banner
+      document.getElementById("bannerTeamName").textContent = team.team_name;
+      document.getElementById("bannerRegId").textContent = team.reg_id;
+      document.getElementById("bannerLeaderName").textContent = team.leader_name;
+      document.getElementById("bannerPsid").textContent = team.psid;
+      document.getElementById("bannerTheme").textContent = team.theme || "Software";
+      document.getElementById("bannerPsTitle").textContent = team.ps_title || "Internal Hackathon (SIH 2026)";
+
+      // Setup Members & Presence Map (Default all present)
+      memberPresenceMap = {};
+      team.members.forEach(m => {
+        memberPresenceMap[m.enrollment] = true;
+      });
+
+      renderMemberList();
+      updatePresenceCounter();
+
+      // Check if attendance was already submitted in Firestore / LocalStorage
+      checkExistingAttendance(team.reg_id);
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function renderMemberList() {
+      const container = document.getElementById("memberListContainer");
+      if (!container || !currentTeam) return;
+
+      container.innerHTML = currentTeam.members.map((m, idx) => {
+        const isPresent = memberPresenceMap[m.enrollment] !== false;
+        const initials = m.name.split(" ").map(w => w[0]).join("").substring(0, 2).toUpperCase();
+        const roleLabel = m.is_leader ? "Team Leader" : `Member ${idx}`;
+        const avatarClass = m.is_leader ? "member-avatar member-avatar--leader" : "member-avatar";
+        const roleBadgeClass = m.is_leader ? "role-badge role-badge--leader" : "role-badge role-badge--member";
+
+        return `
+          <div class="member-card ${isPresent ? 'is-present' : 'is-absent'}" onclick="togglePresence('${escapeHtml(m.enrollment)}')">
+            <div class="member-info">
+              <div class="${avatarClass}">${initials}</div>
+              <div class="member-details">
+                <div class="member-name">
+                  ${escapeHtml(m.name)}
+                  <span class="${roleBadgeClass}">${roleLabel}</span>
+                </div>
+                <div class="member-sub">
+                  Enrollment: <strong>${escapeHtml(m.enrollment)}</strong> • ${escapeHtml(m.branch || "GTU-ITR")}
+                </div>
+              </div>
+            </div>
+
+            <div class="presence-toggle ${isPresent ? 'presence-toggle--present' : 'presence-toggle--absent'}">
+              <i data-lucide="${isPresent ? 'check' : 'x'}" style="width:14px;height:14px;"></i>
+              <span>${isPresent ? 'PRESENT' : 'ABSENT'}</span>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function togglePresence(enrollment) {
+      memberPresenceMap[enrollment] = !memberPresenceMap[enrollment];
+      renderMemberList();
+      updatePresenceCounter();
+    }
+
+    function setAllPresence(val) {
+      if (!currentTeam) return;
+      currentTeam.members.forEach(m => {
+        memberPresenceMap[m.enrollment] = val;
+      });
+      renderMemberList();
+      updatePresenceCounter();
+    }
+
+    function updatePresenceCounter() {
+      if (!currentTeam) return;
+      const total = currentTeam.members.length;
+      const presentCount = Object.values(memberPresenceMap).filter(Boolean).length;
+      const pill = document.getElementById("presenceCounter");
+      if (pill) {
+        pill.textContent = `${presentCount} / ${total} Present`;
+        pill.style.background = presentCount === total ? "rgba(16, 185, 129, 0.12)" : "rgba(245, 158, 11, 0.12)";
+        pill.style.color = presentCount === total ? "#065f46" : "#b45309";
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // GROUP SELFIE CAPTURE & UPLOAD (COMPRESSION + GEO-TIMESTAMP WATERMARK)
+    // -------------------------------------------------------------------------
+    function handleSelfieFileSelect(input) {
+      if (!input.files || !input.files[0]) return;
+      const file = input.files[0];
+
+      // Compress and load image
+      compressAndProcessImage(file, (compressedDataUrl) => {
+        setSelfieImage(compressedDataUrl);
+      });
+    }
+
+    function setSelfieImage(dataUrl) {
+      capturedSelfieDataUrl = dataUrl;
+      const previewImg = document.getElementById("selfiePreviewImg");
+      const previewContainer = document.getElementById("selfiePreviewContainer");
+      const promptArea = document.getElementById("selfiePromptArea");
+      const actionBar = document.getElementById("selfieActionBar");
+      const uploadBox = document.getElementById("selfieUploadBox");
+
+      previewImg.src = dataUrl;
+      previewContainer.style.display = "block";
+      promptArea.style.display = "none";
+      actionBar.style.display = "flex";
+      uploadBox.classList.add("has-image");
+
+      // Set Watermark info
+      document.getElementById("watermarkTeam").textContent = currentTeam ? currentTeam.team_name : "SIH 2026 Team";
+      const now = new Date();
+      document.getElementById("watermarkTimestamp").textContent = now.toLocaleDateString("en-IN", {
+        day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit"
+      });
+    }
+
+    function resetSelfie() {
+      capturedSelfieDataUrl = null;
+      document.getElementById("selfiePreviewContainer").style.display = "none";
+      document.getElementById("selfiePromptArea").style.display = "block";
+      document.getElementById("selfieActionBar").style.display = "none";
+      document.getElementById("selfieUploadBox").classList.remove("has-image");
+      const fileInput = document.getElementById("selfieFileInput");
+      if (fileInput) fileInput.value = "";
+    }
+
+    // Client-side Image Compression (max dimension 1280px, WebP/JPEG 0.82)
+    function compressAndProcessImage(file, callback) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
+
+          let width = img.width;
+          let height = img.height;
+          const maxDimension = 1280;
+
+          if (width > height && width > maxDimension) {
+            height = Math.round((height * maxDimension) / width);
+            width = maxDimension;
+          } else if (height > maxDimension) {
+            width = Math.round((width * maxDimension) / height);
+            height = maxDimension;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Return compressed JPEG data url
+          const compressed = canvas.toDataURL("image/jpeg", 0.82);
+          callback(compressed);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // -------------------------------------------------------------------------
+    // LIVE WEBCAM SELFIE CAPTURE
+    // -------------------------------------------------------------------------
+    async function openLiveCamera() {
+      const modal = document.getElementById("cameraModal");
+      const video = document.getElementById("cameraVideo");
+
+      try {
+        if (activeMediaStream) {
+          activeMediaStream.getTracks().forEach(t => t.stop());
+        }
+
+        activeMediaStream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: cameraFacingMode,
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          },
+          audio: false
+        });
+
+        video.srcObject = activeMediaStream;
+        modal.classList.add("open");
+      } catch (err) {
+        console.warn("Camera access error:", err);
+        alert("Camera permission denied or camera not found. Please choose 'Upload From Device' to upload your selfie.");
+      }
+    }
+
+    function switchCameraFacing() {
+      cameraFacingMode = cameraFacingMode === "user" ? "environment" : "user";
+      const video = document.getElementById("cameraVideo");
+      if (cameraFacingMode === "environment") {
+        video.style.transform = "none";
+      } else {
+        video.style.transform = "scaleX(-1)";
+      }
+      openLiveCamera();
+    }
+
+    function captureLiveSnapshot() {
+      const video = document.getElementById("cameraVideo");
+      const canvas = document.getElementById("cameraCanvas");
+      if (!video || !activeMediaStream) return;
+
+      canvas.width = video.videoWidth || 640;
+      canvas.height = video.videoHeight || 480;
+      const ctx = canvas.getContext("2d");
+
+      if (cameraFacingMode === "user") {
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+      }
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+      closeLiveCamera();
+      setSelfieImage(dataUrl);
+    }
+
+    function closeLiveCamera() {
+      if (activeMediaStream) {
+        activeMediaStream.getTracks().forEach(t => t.stop());
+        activeMediaStream = null;
+      }
+      const modal = document.getElementById("cameraModal");
+      if (modal) modal.classList.remove("open");
+    }
+
+    // -------------------------------------------------------------------------
+    // SUBMIT ATTENDANCE & FIRESTORE STORAGE
+    // -------------------------------------------------------------------------
+    async function handleAttendanceSubmit(event) {
+      event.preventDefault();
+      if (!currentTeam) {
+        alert("Please select your team first.");
+        return;
+      }
+
+      // Check Group Selfie
+      if (!capturedSelfieDataUrl) {
+        alert("📸 Please capture or upload your team's Group Selfie before submitting attendance.");
+        document.getElementById("selfieUploadBox").scrollIntoView({ behavior: "smooth" });
+        return;
+      }
+
+      // Check Presence
+      const presentCount = Object.values(memberPresenceMap).filter(Boolean).length;
+      if (presentCount === 0) {
+        alert("⚠️ At least one member must be marked present to submit attendance.");
+        return;
+      }
+
+      const submitBtn = document.getElementById("submitAttendanceBtn");
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<i data-lucide="loader" class="spin" style="width:20px;height:20px;"></i> Submitting Attendance to Cloud...`;
+      if (window.lucide) lucide.createIcons();
+
+      const remarks = (document.getElementById("attendanceRemarks").value || "").trim();
+      const submittedAt = new Date().toISOString();
+      const submittedAtFormatted = new Date().toLocaleString("en-IN", {
+        day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit"
+      });
+
+      // Prepare Record Object
+      const attendanceRecord = {
+        reg_id: currentTeam.reg_id,
+        team_name: currentTeam.team_name,
+        leader_name: currentTeam.leader_name,
+        leader_phone: currentTeam.leader_phone || "",
+        psid: currentTeam.psid,
+        ps_title: currentTeam.ps_title || "",
+        theme: currentTeam.theme || "",
+        total_members: currentTeam.members.length,
+        present_count: presentCount,
+        absent_count: currentTeam.members.length - presentCount,
+        members_presence: currentTeam.members.map(m => ({
+          name: m.name,
+          enrollment: m.enrollment,
+          role: m.role,
+          is_leader: Boolean(m.is_leader),
+          status: memberPresenceMap[m.enrollment] !== false ? "present" : "absent"
+        })),
+        selfie_image: capturedSelfieDataUrl,
+        remarks: remarks,
+        submitted_at: submittedAt,
+        submitted_at_formatted: submittedAtFormatted,
+        source: "GTU SIH Standby Attendance Portal"
+      };
+
+      // 1. Save to LocalStorage (Instant offline guarantee)
+      try {
+        localStorage.setItem(`gtu_att_${currentTeam.reg_id}`, JSON.stringify(attendanceRecord));
+        const allAtt = JSON.parse(localStorage.getItem("gtu_all_attendance") || "{}");
+        allAtt[currentTeam.reg_id] = attendanceRecord;
+        localStorage.setItem("gtu_all_attendance", JSON.stringify(allAtt));
+      } catch (e) {
+        console.warn("LocalStorage save note:", e);
+      }
+
+      // 2. Save to Google Firebase Firestore
+      let savedToFirestore = false;
+      const docId = `ATT-${currentTeam.reg_id}`;
+
+      if (window.db) {
+        try {
+          await window.db.collection("sih_attendance").doc(docId).set(attendanceRecord);
+          savedToFirestore = true;
+          console.log("[Firestore] Attendance saved successfully!");
+        } catch (fbErr) {
+          console.warn("[Firestore SDK error, attempting REST fallback]:", fbErr);
+        }
+      }
+
+      // 3. Fallback: Firestore REST API
+      if (!savedToFirestore) {
+        try {
+          const restUrl = `https://firestore.googleapis.com/v1/projects/iic-student-form-clone/databases/(default)/documents/sih_attendance?documentId=${docId}`;
+          const fields = {
+            reg_id: { stringValue: currentTeam.reg_id },
+            team_name: { stringValue: currentTeam.team_name },
+            leader_name: { stringValue: currentTeam.leader_name },
+            leader_phone: { stringValue: currentTeam.leader_phone || "" },
+            psid: { stringValue: currentTeam.psid },
+            present_count: { integerValue: String(presentCount) },
+            total_members: { integerValue: String(currentTeam.members.length) },
+            submitted_at: { stringValue: submittedAt },
+            submitted_at_formatted: { stringValue: submittedAtFormatted },
+            remarks: { stringValue: remarks },
+            source: { stringValue: "REST Fallback" }
+          };
+          await fetch(restUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ fields })
+          });
+          console.log("[Firestore REST] Attendance record pushed!");
+        } catch (restErr) {
+          console.warn("[Firestore REST note]:", restErr);
+        }
+      }
+
+      // 4. Background Gateway Notification (if WhatsApp Business Gateway is running locally)
+      notifyLocalWhatsAppGateway(attendanceRecord);
+
+      // 5. Celebration Confetti!
+      if (window.confetti) {
+        confetti({
+          particleCount: 90,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
+      }
+
+      // 6. Show Success Screen Modal
+      showSuccessModal(attendanceRecord);
+
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = `<i data-lucide="check-circle-2" style="width:22px;height:22px;"></i> Submit Team Attendance`;
+      if (window.lucide) lucide.createIcons();
+    }
+
+    // -------------------------------------------------------------------------
+    // WHATSAPP FORWARDING & GATEWAY NOTIFICATIONS
+    // -------------------------------------------------------------------------
+    function generateWhatsAppMessage(record) {
+      const presentMembers = record.members_presence.filter(m => m.status === "present");
+      const absentMembers = record.members_presence.filter(m => m.status === "absent");
+
+      let memberListText = "";
+      presentMembers.forEach((m, i) => {
+        memberListText += `👤 ${i + 1}. *${m.name}* (${m.enrollment}) — PRESENT ✅\n`;
+      });
+
+      let absentListText = "";
+      if (absentMembers.length > 0) {
+        absentListText = `\n❌ *ABSENT MEMBERS:*\n`;
+        absentMembers.forEach((m, i) => {
+          absentListText += `• ${m.name} (${m.enrollment}) — ABSENT\n`;
+        });
+      }
+
+      const remarksText = record.remarks ? `\n💬 *Remarks:* ${record.remarks}\n` : "";
+
+      const msg = 
+`📋 *SIH 2026 Internal Hackathon - Team Attendance*
+━━━━━━━━━━━━━━━━━━━━━━━
+👥 *Team:* ${record.team_name}
+🆔 *Reg ID:* ${record.reg_id}
+💡 *PSID:* ${record.psid} (${record.theme || "Software"})
+👑 *Leader:* ${record.leader_name} (${record.leader_phone || "-"})
+
+📊 *Attendance Status:* ${record.present_count} / ${record.total_members} PRESENT ✅
+━━━━━━━━━━━━━━━━━━━━━━━
+${memberListText}${absentListText}${remarksText}
+📸 *Group Selfie:* Uploaded & Verified
+⏰ *Time:* ${record.submitted_at_formatted}
+📍 *GTU-ITR IIC & R&D Cell*`;
+
+      return msg;
+    }
+
+    function showSuccessModal(record) {
+      document.getElementById("modalTeamName").textContent = record.team_name;
+      document.getElementById("modalLeaderName").textContent = record.leader_name;
+      document.getElementById("modalPresenceStatus").textContent = `${record.present_count} / ${record.total_members} Present`;
+      document.getElementById("modalTimestamp").textContent = record.submitted_at_formatted;
+
+      // WhatsApp Forward Link to Admin Number (+91 9978309254)
+      const waMsg = generateWhatsAppMessage(record);
+      const waUrl = `https://wa.me/${adminWhatsAppNumber}?text=${encodeURIComponent(waMsg)}`;
+      const forwardBtn = document.getElementById("whatsappForwardBtn");
+      forwardBtn.href = waUrl;
+
+      document.getElementById("successModal").classList.add("open");
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function closeSuccessModal() {
+      document.getElementById("successModal").classList.remove("open");
+      // Show Already Marked Alert
+      checkExistingAttendance(currentTeam.reg_id);
+    }
+
+    function forwardExistingAttendance() {
+      if (!currentTeam) return;
+      const saved = localStorage.getItem(`gtu_att_${currentTeam.reg_id}`);
+      if (saved) {
+        const record = JSON.parse(saved);
+        const waMsg = generateWhatsAppMessage(record);
+        window.open(`https://wa.me/${adminWhatsAppNumber}?text=${encodeURIComponent(waMsg)}`, "_blank");
+      } else {
+        alert("No attendance record found locally. Please mark and submit attendance.");
+      }
+    }
+
+    function copyAttendanceSummary() {
+      if (!currentTeam) return;
+      const saved = localStorage.getItem(`gtu_att_${currentTeam.reg_id}`);
+      if (saved) {
+        const record = JSON.parse(saved);
+        const waMsg = generateWhatsAppMessage(record);
+        navigator.clipboard.writeText(waMsg).then(() => {
+          alert("✅ Attendance summary copied to clipboard! You can paste it in your WhatsApp chat.");
+        });
+      }
+    }
+
+    function enableReEdit() {
+      document.getElementById("alreadyMarkedAlert").style.display = "none";
+      alert("You can now update presence or re-take the group selfie, then click 'Submit Team Attendance' to save changes.");
+    }
+
+    // Check if attendance already recorded
+    async function checkExistingAttendance(regId) {
+      const alertBox = document.getElementById("alreadyMarkedAlert");
+      const details = document.getElementById("alreadyMarkedDetails");
+
+      // 1. Check LocalStorage
+      const local = localStorage.getItem(`gtu_att_${regId}`);
+      if (local) {
+        try {
+          const rec = JSON.parse(local);
+          alertBox.style.display = "block";
+          details.innerHTML = `Submitted on <strong>${rec.submitted_at_formatted}</strong> • <strong>${rec.present_count}/${rec.total_members} Members Present</strong>.`;
+          if (rec.selfie_image) {
+            setSelfieImage(rec.selfie_image);
+          }
+          if (rec.members_presence) {
+            rec.members_presence.forEach(m => {
+              memberPresenceMap[m.enrollment] = (m.status === "present");
+            });
+            renderMemberList();
+            updatePresenceCounter();
+          }
+          return;
+        } catch (e) {}
+      }
+
+      // 2. Check Firestore
+      if (window.db) {
+        try {
+          const snap = await window.db.collection("sih_attendance").doc(`ATT-${regId}`).get();
+          if (snap.exists) {
+            const data = snap.data();
+            alertBox.style.display = "block";
+            details.innerHTML = `Submitted on <strong>${data.submitted_at_formatted || "Recently"}</strong> • <strong>${data.present_count}/${data.total_members} Members Present</strong>.`;
+            if (data.selfie_image) {
+              setSelfieImage(data.selfie_image);
+            }
+            if (data.members_presence) {
+              data.members_presence.forEach(m => {
+                memberPresenceMap[m.enrollment] = (m.status === "present");
+              });
+              renderMemberList();
+              updatePresenceCounter();
+            }
+          } else {
+            alertBox.style.display = "none";
+          }
+        } catch (e) {
+          alertBox.style.display = "none";
+        }
+      }
+    }
+
+    // Send background ping to local WhatsApp gateway if reachable
+    async function notifyLocalWhatsAppGateway(record) {
+      try {
+        const waMsg = generateWhatsAppMessage(record);
+        await fetch("http://localhost:8090/api/send", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            phone: adminWhatsAppNumber,
+            message: waMsg
+          })
+        });
+        console.log("[WhatsApp Gateway] Attendance forwarded automatically to admin!");
+      } catch (e) {
+        // Gateway unreachable from client browser or CORS; user will click the WhatsApp forward button
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+  </script>
+</body>
+</html>

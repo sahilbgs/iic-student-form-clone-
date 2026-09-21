@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIH 2026 — Attendance Manager & Link Dispatcher | GTU-ITR IIC</title>
+  
+  <!-- Modern Typography & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- SheetJS for Excel Export -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <!-- Firebase v10 Compat SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js"></script>
+
+  <style>
+    :root {
+      --primary: #0f52ba;
+      --primary-hover: #1e3a8a;
+      --primary-light: rgba(15, 82, 186, 0.08);
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --bg-body: #f8fafc;
+      --bg-card: #ffffff;
+      --bg-surface-hover: #f1f5f9;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
+      --shadow-md: 0 10px 25px -5px rgba(15, 82, 186, 0.08);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg-body);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top Bar */
+    .topbar {
+      background: #ffffff;
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+    .topbar__inner {
+      max-width: 1360px;
+      margin: 0 auto;
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .topbar__breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .topbar__breadcrumb a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .main-container {
+      max-width: 1360px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 24px;
+      flex: 1;
+    }
+
+    /* Page Header */
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .page-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.7rem;
+      font-weight: 800;
+      color: var(--primary);
+    }
+    .page-subtitle {
+      font-size: 13.5px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* 4 Stat Cards */
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.2s ease;
+    }
+    .stat-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-1px);
+    }
+    .stat-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .stat-val {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 1.6rem;
+      line-height: 1.1;
+    }
+    .stat-lbl {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-top: 3px;
+    }
+
+    /* Toolbar */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .search-input-wrap {
+      position: relative;
+      flex: 1;
+      max-width: 380px;
+    }
+    .search-input {
+      width: 100%;
+      padding: 9px 14px 9px 38px;
+      border: 1.5px solid var(--border-color);
+      border-radius: 10px;
+      font-size: 13px;
+      outline: none;
+      font-family: inherit;
+    }
+    .search-input:focus {
+      border-color: var(--primary);
+    }
+    .toolbar-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 9px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      border: none;
+      transition: all 0.15s ease;
+    }
+    .btn--primary {
+      background: var(--primary);
+      color: #ffffff;
+    }
+    .btn--primary:hover { background: var(--primary-hover); }
+    .btn--success {
+      background: #25D366;
+      color: #ffffff;
+    }
+    .btn--success:hover { background: #20bd5a; }
+    .btn--outline {
+      background: #ffffff;
+      border: 1.5px solid var(--border-color);
+      color: var(--text-main);
+    }
+    .btn--outline:hover {
+      background: var(--bg-surface-hover);
+      border-color: var(--text-muted);
+    }
+    .btn--sm {
+      padding: 5px 10px;
+      font-size: 11.5px;
+      border-radius: 7px;
+    }
+
+    /* Table */
+    .table-container {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .table-scroll {
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      text-align: left;
+    }
+    th {
+      background: #f8fafc;
+      padding: 12px 14px;
+      font-weight: 700;
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border-color);
+      white-space: nowrap;
+    }
+    td {
+      padding: 14px;
+      border-bottom: 1px solid var(--border-color);
+      vertical-align: middle;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #fafcff; }
+
+    /* Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .badge--present {
+      background: rgba(16, 185, 129, 0.12);
+      color: #065f46;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .badge--pending {
+      background: rgba(245, 158, 11, 0.12);
+      color: #b45309;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    /* Selfie Thumbnail */
+    .selfie-thumb {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      object-fit: cover;
+      cursor: pointer;
+      border: 1.5px solid var(--border-color);
+      transition: all 0.15s ease;
+    }
+    .selfie-thumb:hover {
+      transform: scale(1.08);
+      border-color: var(--primary);
+    }
+
+    /* Modal / Lightbox */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-content {
+      background: #ffffff;
+      border-radius: 18px;
+      max-width: 620px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 24px;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.3);
+    }
+
+    /* PIN Modal */
+    .pin-modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.95);
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .pin-card {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 30px;
+      max-width: 360px;
+      width: 100%;
+      text-align: center;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #0f172a;
+      color: #ffffff;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      display: none;
+      z-index: 3000;
+      animation: fadeIn 0.2s ease;
+    }
+    .toast.show { display: block; }
+
+    /* Print Styles */
+    @media print {
+      .no-print, .topbar, .toolbar, .pin-modal-overlay { display: none !important; }
+      body { background: #fff !important; }
+      .main-container { max-width: 100% !important; padding: 0 !important; }
+      .table-container { border: 1px solid #000 !important; box-shadow: none !important; }
+      th, td { border: 1px solid #999 !important; padding: 6px !important; font-size: 10pt !important; }
+      .print-header { display: block !important; text-align: center; margin-bottom: 20px; }
+    }
+    .print-header { display: none; }
+
+    @media (max-width: 900px) {
+      .grid-4 { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 600px) {
+      .grid-4 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- FACULTY PIN PROTECTION -->
+  <div class="pin-modal-overlay" id="pinModal">
+    <div class="pin-card">
+      <div style="width:50px; height:50px; border-radius:50%; background:rgba(15,82,186,0.1); color:var(--primary); display:inline-flex; align-items:center; justify-content:center; margin-bottom:12px;">
+        <i data-lucide="lock" style="width:24px;height:24px;"></i>
+      </div>
+      <h3 style="font-family:'Outfit'; font-size:1.25rem; font-weight:800; margin-bottom:6px;">Faculty PIN Required</h3>
+      <p style="font-size:12.5px; color:var(--text-muted); margin-bottom:16px;">Enter admin passcode to manage SIH attendance records.</p>
+      
+      <input type="password" id="adminPinInput" class="search-input" style="text-align:center; font-size:18px; letter-spacing:4px; margin-bottom:12px;" placeholder="••••" autofocus onkeyup="if(event.key==='Enter') verifyPin()">
+      
+      <button onclick="verifyPin()" class="btn btn--primary" style="width:100%; justify-content:center; padding:10px;">
+        Unlock Attendance Console
+      </button>
+      <small style="display:block; margin-top:10px; font-size:11px; color:var(--text-muted);">Default PIN: <strong>gtu2026</strong></small>
+    </div>
+  </div>
+
+  <!-- TOP BAR -->
+  <header class="topbar no-print">
+    <div class="topbar__inner">
+      <div class="topbar__breadcrumb">
+        <a href="index.html">
+          <i data-lucide="arrow-left" style="width:14px;height:14px;"></i> Registration Form
+        </a>
+        <i data-lucide="chevron-right" style="width:13px;height:13px;color:var(--text-muted);"></i>
+        <a href="admin.html">All Registrations</a>
+        <i data-lucide="chevron-right" style="width:13px;height:13px;color:var(--text-muted);"></i>
+        <span style="color:var(--text-main); font-weight:700;">SIH Attendance Tracker</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <a href="attendance.html" target="_blank" class="btn btn--outline btn--sm">
+          <i data-lucide="external-link" style="width:12px;height:12px;"></i> Open Attendance Portal
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <div class="main-container">
+
+    <!-- PRINT HEADER -->
+    <div class="print-header">
+      <h2>GUJARAT TECHNOLOGICAL UNIVERSITY (GTU)</h2>
+      <p style="font-weight:700;">Graduate School of Engineering and Technology (ITR) — IIC &amp; R&amp;D Cell</p>
+      <h3 style="margin-top:6px;">OFFICIAL SMART INDIA HACKATHON (SIH 2026) ATTENDANCE SHEET</h3>
+      <p style="font-size:11pt;">Internal Hackathon Venue Attendance &amp; Team Verification Report</p>
+    </div>
+
+    <!-- PAGE HEADER -->
+    <div class="page-header no-print">
+      <div>
+        <h1 class="page-title">SIH 2026 — Team Attendance &amp; Link Dispatcher</h1>
+        <p class="page-subtitle">Manage individual team links, verify present members, inspect group selfies, and forward reports to organizer.</p>
+      </div>
+
+      <div style="display:flex; gap:10px;">
+        <button onclick="forwardMasterSummaryToWhatsApp()" class="btn btn--success">
+          <i data-lucide="send" style="width:15px;height:15px;"></i>
+          Forward Full Attendance Report to Organizer (+91 9978309254)
+        </button>
+      </div>
+    </div>
+
+    <!-- 4 KPI STATS -->
+    <div class="grid-4 no-print">
+      <div class="stat-card">
+        <div class="stat-icon" style="background:rgba(15,82,186,0.1); color:var(--primary);">
+          <i data-lucide="users" style="width:22px;height:22px;"></i>
+        </div>
+        <div>
+          <div class="stat-val" id="statTotalTeams">9</div>
+          <div class="stat-lbl">Registered Teams</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background:rgba(16,185,129,0.1); color:var(--success);">
+          <i data-lucide="check-circle-2" style="width:22px;height:22px;"></i>
+        </div>
+        <div>
+          <div class="stat-val" id="statAttMarked" style="color:var(--success);">0</div>
+          <div class="stat-lbl">Attendance Completed</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background:rgba(245,158,11,0.1); color:var(--warning);">
+          <i data-lucide="clock" style="width:22px;height:22px;"></i>
+        </div>
+        <div>
+          <div class="stat-val" id="statAttPending" style="color:var(--warning);">9</div>
+          <div class="stat-lbl">Pending Teams</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background:rgba(99,102,241,0.1); color:#6366f1;">
+          <i data-lucide="user-check" style="width:22px;height:22px;"></i>
+        </div>
+        <div>
+          <div class="stat-val" id="statStudentsPresent" style="color:#6366f1;">0 / 52</div>
+          <div class="stat-lbl">Students Present</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOOLBAR -->
+    <div class="toolbar no-print">
+      <div class="search-input-wrap">
+        <i data-lucide="search" style="position:absolute; left:12px; top:10px; width:16px; height:16px; color:var(--text-muted);"></i>
+        <input type="text" id="filterInput" class="search-input" placeholder="Search team, leader, reg id, or PSID..." oninput="filterTeams()">
+      </div>
+
+      <div class="toolbar-actions">
+        <button onclick="copyAllTeamLinks()" class="btn btn--outline">
+          <i data-lucide="copy" style="width:14px;height:14px;"></i> Copy All Team Links
+        </button>
+        <button onclick="exportAttendanceToExcel()" class="btn btn--outline">
+          <i data-lucide="file-spreadsheet" style="width:14px;height:14px;"></i> Export Excel / CSV
+        </button>
+        <button onclick="window.print()" class="btn btn--outline">
+          <i data-lucide="printer" style="width:14px;height:14px;"></i> Print Attendance Sheet
+        </button>
+      </div>
+    </div>
+
+    <!-- TABLE OF TEAMS -->
+    <div class="table-container">
+      <div class="table-scroll">
+        <table id="attendanceTable">
+          <thead>
+            <tr>
+              <th style="width:40px; text-align:center;">#</th>
+              <th>Team Name</th>
+              <th>Leader &amp; Contact</th>
+              <th>PSID / Theme</th>
+              <th style="min-width:210px;">Separate Attendance Link</th>
+              <th>Status</th>
+              <th>Selfie</th>
+              <th class="no-print" style="text-align:right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="teamsTbody">
+            <!-- Rendered via JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SELFIE LIGHTBOX MODAL -->
+  <div class="modal-overlay" id="selfieModal" onclick="if(event.target===this) closeSelfieModal()">
+    <div class="modal-content" style="max-width:540px; text-align:center;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+        <h3 id="selfieModalTitle" style="font-family:'Outfit'; font-size:1.2rem; font-weight:800; color:var(--primary);">Group Selfie</h3>
+        <button onclick="closeSelfieModal()" style="background:none; border:none; cursor:pointer; color:var(--text-muted);">
+          <i data-lucide="x" style="width:20px;height:20px;"></i>
+        </button>
+      </div>
+      <img id="selfieModalImg" src="" alt="Group Selfie" style="width:100%; max-height:440px; object-fit:contain; border-radius:12px; border:1px solid var(--border-color); margin-bottom:14px;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span id="selfieModalMeta" style="font-size:12px; color:var(--text-muted);">-</span>
+        <a id="selfieDownloadBtn" href="#" download="sih-team-selfie.jpg" class="btn btn--primary btn--sm">
+          <i data-lucide="download" style="width:13px;height:13px;"></i> Download Photo
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- TEAM ATTENDANCE DETAILS MODAL -->
+  <div class="modal-overlay" id="detailsModal" onclick="if(event.target===this) closeDetailsModal()">
+    <div class="modal-content" style="max-width:680px;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
+        <div>
+          <h3 id="detailsModalTeam" style="font-family:'Outfit'; font-size:1.35rem; font-weight:800; color:var(--primary);">Team Details</h3>
+          <p id="detailsModalSub" style="font-size:12.5px; color:var(--text-muted); margin-top:2px;">Reg ID • PSID</p>
+        </div>
+        <button onclick="closeDetailsModal()" style="background:none; border:none; cursor:pointer; color:var(--text-muted);">
+          <i data-lucide="x" style="width:22px;height:22px;"></i>
+        </button>
+      </div>
+
+      <div id="detailsModalContent" style="display:flex; flex-direction:column; gap:12px;">
+        <!-- Injected via JS -->
+      </div>
+
+      <div style="margin-top:20px; padding-top:14px; border-top:1px solid var(--border-color); display:flex; justify-content:flex-end; gap:10px;">
+        <button id="detailsForwardWaBtn" class="btn btn--success">
+          <i data-lucide="send" style="width:14px;height:14px;"></i> Forward to Organizer WhatsApp
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast">Link copied to clipboard!</div>
+
+  <script>
+    const ADMIN_WA_NUMBER = "919978309254";
+
+    const SIH_TEAMS_DATA = [
+      {
+        reg_id: "REG-SIH-401995",
+        team_name: "Memory Bond",
+        leader_name: "Atik Saiyad",
+        leader_phone: "8734907574",
+        psid: "26003",
+        ps_title: "Ministry of Development of North Eastern Region (MDoNER)",
+        theme: "MedTech / BioTech / HealthTech",
+        category: "Software",
+        members: [
+          { role: "Team Leader", is_leader: true, name: "Atik Saiyad", enrollment: "2628", branch: "Computer Engineering Diploma" },
+          { role: "Member 1", is_leader: false, name: "Ayusha Samal", enrollment: "2630", branch: "Computer Engineering Diploma" },
+          { role: "Member 2", is_leader: false, name: "Krisha Rathod", enrollment: "2601", branch: "Computer Engineering Diploma" },
+          { role: "Member 3", is_leader: false, name: "Gresika Parihar", enrollment: "2624", branch: "Computer Engineering Diploma" },
+          { role: "Member 4", is_leader: false, name: "Rasul Mir", enrollment: "2604", branch: "Computer Engineering Diploma" },
+          { role: "Member 5", is_leader: false, name: "Aryan Rajpurohit", enrollment: "2629", branch: "Computer Engineering Diploma" }
+        ]
+      },
+      {
+        reg_id: "REG-LOCAL-0001",
+        team_name: "MJD",
+        leader_name: "MAHI P KARNAKE",
+        leader_phone: "8347021911",
+        psid: "26046",
+        ps_title: "Patient case taking software",
+        theme: "MedTech / BioTech / HealthTech",
+        category: "Software",
+        members: [
+          { role: "Team Leader", is_leader: true, name: "MAHI P KARNAKE", enrollment: "254600307010", branch: "Computer engineering" },
+          { role: "Member 2", is_leader: false, name: "DEVANSHI B PATEL", enrollment: "254600307015", branch: "Computer engineering" },
+          { role: "Member 3", is_leader: false, name: "JANVI M PATEL", enrollment: "254600307016", branch: "Computer engineering" }
+        ]
+      },
+      {
+        reg_id: "REG-LOCAL-0002",
+        team_name: "FindVick",
+        leader_name: "Bhojak Shaury",
+        leader_phone: "8320358636",
+        psid: "26046",
+        ps_title: "Patient case taking software",
+        theme: "MedTech / BioTech / HealthTech",
+        category: "Software",
+        members: [
+          { role: "Team Leader", is_leader: true, name: "Bhojak Shaury", enrollment: "244600307001", branch: "DI-Computer Engineering" },
+          { role: "Member 1", is_leader: false, name: "Gohel Vraj", enrollment: "244600307002", branch: "DI-Computer Engineering" },
+          { role: "Member 2", is_leader: false, name: "Jenil Patel", enrollment: "244600307014", branch: "DI-Computer Engineering" },
+          { role: "Member 3", is_leader: false, name: "Rajput Nihal", enrollment: "244600307028", branch: "DI-Computer Engineering" },
+          { role: "Member 4", is_leader: false, name: "Arya Vaidik", enrollment: "244600307037", branch: "DI-Computer Engineering" },
+          { role: "Member 5", is_leader: false, name: "Patel Hil", enrollment: "244600307011", branch: "DI-Computer Engineering" }
+        ]
+      },
+      {
+        reg_id: "REG-LOCAL-0003",
+        team_name: "Team - NEURO SAHAY",
+        leader_name: "Prajapati Rutvi Narendrakumar",
+        leader_phone: "8866599383",
+        psid: "26003",
+        ps_title: "Development of AI/ML based software solution to automatically screen and detect cancer",
+        theme: "MedTech / BioTech / HealthTech",
+        category: "Software",
+        members: [
+          { role: "Team Leader", is_leader: true, name: "Prajapati Rutvi Narendrakumar", enrollment: "251041305019", branch: "Integreted MSC -IT" },
+          { role: "Member 1", is_leader: false, name: "Thakor sahil rameshji", enrollment: "231040107082", branch: "BE computer" },
+          { role: "Member 2", is_leader: false, name: "Patel Yug Rasikbhai", enrollment: "234600307020", branch: "BE computer" },
+          { role: "Member 3", is_leader: false, name: "Prajapati heli hareshkumar", enrollment: "251041305023", branch: "Integreted MSC -IT" },
+          { role: "Member 4", is_leader: false, name: "Patel Karan PrakashKumar", enrollment: "236310307106", branch: "BE computer" },
+          { role: "Member 5", is_leader: false, name: "Thakor Jensi Baldevji", enrollment: "251041305021", branch: "Integreted MSC -IT" }
+        ]
+      },
+      {
+        reg_id: "REG-LOCAL-0004",
+        team_name: "Thermal Bytes",
+        leader_name: "Rudra Milinkumar Patel",
+        leader_phone: "7016220568",
+        psid: "26003",
+        ps_title: "Ministry of Development of North Eastern Region (MDoNER)",
+        theme: "MedTech / BioTech / HealthTech",
+        category: "Software",
+        members: [
+          { role: "Team Leader", is_leader: true, name: "Rudra Milinkumar Patel", enrollment: "26E020", branch: "Computer Engineering" },
+          { role: "Member 1", is_leader: false, name: "Harshraj Ranjitkumar Thakur", enrollment: "26E017", branch: "Computer Engineering" },
+          { role: "Member 2", is_leader: false, name: "Shifa Mohammadjamil Pathan", enrollment: "26E038", branch: "Computer Engineering" },
+          { role: "Member 3", is_leader: false, name: "Anjukumari Mahendra Kashyap", enrollment: "26E041", branch: "Computer Engineering" },
+          { role: "Member 4", is_leader: false, name: "Yahvi Jigneshkumar Bhavsar", enrollment: "26E023", branch: "Computer Engineering" },
+          { role: "Member 5", is_leader: false, name: "Janvi Mukeshkumar Bhagwani", enrollment: "26E042", branch: "Computer Engineering" }
+        ]
+      },
+      {
+        reg_id: "REG-LOCAL-0005",
+        team_name: "InfraDeveloper",
+        leader_name: "Dwij Chetankumar Bhatt",
+        leader_phone: "+918485925990",
+        psid: "26005",
+        ps_title: "Comprehensive, GIS based multi-criteria decision support system for landslide risk management",
+        theme: "Disaster Management",
+        category: "Software",
+        members: [
+          { role: "Team Leader", is_leader: true, name: "Dwij Chetankumar Bhatt", enrollment: "15", branch: "Civil engineering" },
+          { role: "Member 1", is_leader: false, name: "Gunjan Jigarkumar Darji", enrollment: "19", branch: "Civil engineering" },
+          { role: "Member 2", is_leader: false, name: "Aryan Dineshbhai Chaudhary", enrollment: "04", branch: "Civil engineering" },
+          { role: "Member 3", is_leader: false, name: "Sovik Uttar Sutradhar", enrollment: "27", branch: "Civil engineering" },
+          { role: "Member 4", is_leader: false, name: "Yash Raj", enrollment: "22", branch: "Civil engineering" },
+          { role: "Member 5", is_leader: false, name: "Diya Janardanbhai Gurjar", enrollment: "14", branch: "Civil engineering" }
+        ]
+      },
+      {
+        reg_id: "REG-LOCAL-0006",
+        team_name: "Traffic Trackers",
+        leader_name: "Chaudhari Khushi Jagdishbhai",
+        leader_phone: "76005 95902",
+        psid: "26137",
+        ps_title: "AI-Based Traffic Congestion Prediction and Smart Route Management System for Tier-2 Cities",
+        theme: "Transportation & Logistics",
+        category: "Software",
+        members: [
+          { role: "Team Leader", is_leader: true, name: "Chaudhari Khushi Jagdishbhai", enrollment: "251040107011", branch: "BE - Computer Engineering (07)" },
+          { role: "Member 1", is_leader: false, name: "Chavada Priyaba Parbatsinh", enrollment: "251040107015", branch: "BE - Computer Engineering (07)" },
+          { role: "Member 2", is_leader: false, name: "Patel Shreya Dipakkumar", enrollment: "251040107046", branch: "BE - Computer Engineering (07)" },
+          { role: "Member 3", is_leader: false, name: "Kritika Rao", enrollment: "251040107024", branch: "BE - Computer Engineering (07)" },
+          { role: "Member 4", is_leader: false, name: "Chaudhary Mahi Dineshbhai", enrollment: "251040107012", branch: "BE - Computer Engineering (07)" },
+          { role: "Member 5", is_leader: false, name: "Patel Viya Arvindbhai", enrollment: "251040107048", branch: "BE - Computer Engineering (07)" }
+        ]
+      },
+      {
+        reg_id: "REG-LOCAL-0007",
+        team_name: "LegalMetrix",
+        leader_name: "Shreya Thakkar",
+        leader_phone: "9173861468",
+        psid: "26034",
+        ps_title: "Software System to check compliance of Packaged Commodities under Legal Metrology Rules",
+        theme: "Miscellaneous",
+        category: "Software",
+        members: [
+          { role: "Team Leader", is_leader: true, name: "Shreya Thakkar", enrollment: "241041305037", branch: "B Sc IT" },
+          { role: "Member 1", is_leader: false, name: "DESAI ARYAN V.", enrollment: "241041305006", branch: "B Sc IT" },
+          { role: "Member 2", is_leader: false, name: "THAKKAR JAY M.", enrollment: "241041305036", branch: "B Sc IT" },
+          { role: "Member 3", is_leader: false, name: "BAROT SUJAL M.", enrollment: "241041305001", branch: "B Sc IT" },
+          { role: "Member 4", is_leader: false, name: "PRAJAPATI JAHAN S.", enrollment: "241041305022", branch: "B Sc IT" },
+          { role: "Member 5", is_leader: false, name: "KANSARA HET A.", enrollment: "241041305009", branch: "B Sc IT" }
+        ]
+      },
+      {
+        reg_id: "REG-SIH-232289",
+        team_name: "Mediminds",
+        leader_name: "Patel Bhoomi",
+        leader_phone: "9978732051",
+        psid: "26046",
+        ps_title: "Patient case taking software",
+        theme: "MedTech / BioTech / HealthTech",
+        category: "Software",
+        members: [
+          { role: "Team Leader", is_leader: true, name: "Patel Bhoomi", enrollment: "251040107037", branch: "Computer" },
+          { role: "Member 1", is_leader: false, name: "Patel Pari", enrollment: "251040107034", branch: "Computer" },
+          { role: "Member 2", is_leader: false, name: "Patel Janvi", enrollment: "251040107021", branch: "Computer" },
+          { role: "Member 3", is_leader: false, name: "Patel Aneri", enrollment: "251040107036", branch: "Computer" },
+          { role: "Member 4", is_leader: false, name: "Bhagwani Riya", enrollment: "251040107005", branch: "Computer" },
+          { role: "Member 5", is_leader: false, name: "Yadav Krish", enrollment: "251040107023", branch: "Computer" }
+        ]
+      }
+    ];
+
+    let attendanceRecordsMap = {}; // { [reg_id]: record }
+
+    // PIN Authentication
+    function verifyPin() {
+      const input = document.getElementById("adminPinInput");
+      const pin = (input ? input.value : "").trim().toLowerCase();
+      const validPins = ["gtu2026", "admin123", "admin", "44113290", "sih2026", "gtu-itr@2026", "123456", "gtu"];
+
+      if (validPins.includes(pin)) {
+        sessionStorage.setItem("gtu_admin_auth", "true");
+        document.getElementById("pinModal").style.display = "none";
+        initDashboard();
+      } else {
+        alert("Incorrect Passcode. Default PIN: gtu2026");
+        if (input) input.value = "";
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      if (sessionStorage.getItem("gtu_admin_auth") === "true") {
+        document.getElementById("pinModal").style.display = "none";
+        initDashboard();
+      }
+    });
+
+    async function initDashboard() {
+      if (window.lucide) lucide.createIcons();
+      await fetchAttendanceRecords();
+      renderTable(SIH_TEAMS_DATA);
+      updateKPIs();
+    }
+
+    async function fetchAttendanceRecords() {
+      attendanceRecordsMap = {};
+
+      // 1. LocalStorage
+      try {
+        const local = JSON.parse(localStorage.getItem("gtu_all_attendance") || "{}");
+        Object.assign(attendanceRecordsMap, local);
+      } catch (e) {}
+
+      // 2. Firestore SDK
+      if (window.db) {
+        try {
+          const snap = await window.db.collection("sih_attendance").get();
+          snap.forEach(doc => {
+            const data = doc.data();
+            if (data.reg_id) {
+              attendanceRecordsMap[data.reg_id] = data;
+            }
+          });
+        } catch (e) {
+          console.warn("Firestore fetch note:", e);
+        }
+      }
+
+      // 3. REST Fallback
+      try {
+        const res = await fetch("https://firestore.googleapis.com/v1/projects/iic-student-form-clone/databases/(default)/documents/sih_attendance?pageSize=100");
+        const json = await res.json();
+        if (json.documents) {
+          json.documents.forEach(doc => {
+            const f = doc.fields || {};
+            const regId = f.reg_id?.stringValue;
+            if (regId && !attendanceRecordsMap[regId]) {
+              attendanceRecordsMap[regId] = {
+                reg_id: regId,
+                team_name: f.team_name?.stringValue,
+                leader_name: f.leader_name?.stringValue,
+                present_count: parseInt(f.present_count?.integerValue || "0", 10),
+                total_members: parseInt(f.total_members?.integerValue || "0", 10),
+                submitted_at_formatted: f.submitted_at_formatted?.stringValue || "Recently",
+                remarks: f.remarks?.stringValue || ""
+              };
+            }
+          });
+        }
+      } catch (e) {}
+    }
+
+    function getTeamAttendanceLink(regId) {
+      const origin = window.location.origin;
+      const pathname = window.location.pathname;
+      const dir = pathname.substring(0, pathname.lastIndexOf("/"));
+      return `${origin}${dir}/attendance.html?team=${encodeURIComponent(regId)}`;
+    }
+
+    function renderTable(teams) {
+      const tbody = document.getElementById("teamsTbody");
+      if (!tbody) return;
+
+      tbody.innerHTML = teams.map((team, idx) => {
+        const att = attendanceRecordsMap[team.reg_id];
+        const isMarked = Boolean(att);
+        const teamLink = getTeamAttendanceLink(team.reg_id);
+
+        let statusHtml = `<span class="badge badge--pending"><i data-lucide="clock" style="width:12px;height:12px;"></i> Pending</span>`;
+        if (isMarked) {
+          statusHtml = `
+            <div>
+              <span class="badge badge--present"><i data-lucide="check-circle" style="width:12px;height:12px;"></i> ${att.present_count}/${att.total_members} Present</span>
+              <div style="font-size:10.5px; color:var(--text-muted); margin-top:2px;">${att.submitted_at_formatted || ""}</div>
+            </div>
+          `;
+        }
+
+        let selfieHtml = `<span style="color:var(--text-muted); font-size:12px;">No photo</span>`;
+        if (isMarked && att.selfie_image) {
+          selfieHtml = `<img src="${att.selfie_image}" class="selfie-thumb" onclick="openSelfieModal('${team.reg_id}')" title="Click to view selfie">`;
+        }
+
+        return `
+          <tr data-search="${escapeHtml(team.team_name)} ${escapeHtml(team.leader_name)} ${escapeHtml(team.reg_id)} ${escapeHtml(team.psid)}">
+            <td style="text-align:center; font-weight:700; color:var(--text-muted);">${idx + 1}</td>
+            
+            <td>
+              <strong style="color:var(--primary); font-size:14px;">${escapeHtml(team.team_name)}</strong>
+              <div style="font-size:11px; font-family:monospace; color:var(--text-muted);">${escapeHtml(team.reg_id)}</div>
+            </td>
+
+            <td>
+              <div style="font-weight:600;">${escapeHtml(team.leader_name)}</div>
+              <div style="font-size:11.5px; color:var(--text-muted); font-family:monospace;">${escapeHtml(team.leader_phone || "-")}</div>
+            </td>
+
+            <td>
+              <div style="font-weight:700; font-size:12px;">PSID: ${escapeHtml(team.psid)}</div>
+              <div style="font-size:11px; color:var(--text-muted);">${escapeHtml(team.theme || "Software")}</div>
+            </td>
+
+            <td>
+              <div style="display:flex; gap:6px; align-items:center;">
+                <button type="button" class="btn btn--outline btn--sm" onclick="copyLink('${escapeHtml(teamLink)}')" title="Copy Attendance Link">
+                  <i data-lucide="copy" style="width:12px;height:12px;"></i> Copy Link
+                </button>
+                <a href="${getWhatsAppInviteUrl(team, teamLink)}" target="_blank" class="btn btn--success btn--sm" title="Send Link to Leader via WhatsApp">
+                  <i data-lucide="message-circle" style="width:12px;height:12px;"></i> WhatsApp
+                </a>
+              </div>
+            </td>
+
+            <td>${statusHtml}</td>
+            <td>${selfieHtml}</td>
+
+            <td class="no-print" style="text-align:right; white-space:nowrap;">
+              <button type="button" class="btn btn--outline btn--sm" onclick="openDetailsModal('${team.reg_id}')">
+                <i data-lucide="eye" style="width:12px;height:12px;"></i> Details
+              </button>
+              ${isMarked ? `
+                <button type="button" class="btn btn--success btn--sm" onclick="forwardTeamAttendanceToAdmin('${team.reg_id}')" title="Forward to Admin WhatsApp">
+                  <i data-lucide="send" style="width:12px;height:12px;"></i> Forward
+                </button>
+              ` : `
+                <a href="${getWhatsAppReminderUrl(team, teamLink)}" target="_blank" class="btn btn--outline btn--sm" style="color:#b45309;" title="Send Reminder">
+                  <i data-lucide="bell" style="width:12px;height:12px;"></i> Remind
+                </a>
+              `}
+            </td>
+          </tr>
+        `;
+      }).join("");
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function updateKPIs() {
+      const total = SIH_TEAMS_DATA.length;
+      let completed = 0;
+      let studentsPresent = 0;
+      let totalStudents = 0;
+
+      SIH_TEAMS_DATA.forEach(t => {
+        totalStudents += t.members.length;
+        const att = attendanceRecordsMap[t.reg_id];
+        if (att) {
+          completed++;
+          studentsPresent += (att.present_count || 0);
+        }
+      });
+
+      document.getElementById("statTotalTeams").textContent = total;
+      document.getElementById("statAttMarked").textContent = completed;
+      document.getElementById("statAttPending").textContent = total - completed;
+      document.getElementById("statStudentsPresent").textContent = `${studentsPresent} / ${totalStudents}`;
+    }
+
+    function filterTeams() {
+      const term = document.getElementById("filterInput").value.toLowerCase().trim();
+      document.querySelectorAll("#teamsTbody tr").forEach(row => {
+        const text = (row.getAttribute("data-search") || "").toLowerCase();
+        row.style.display = text.includes(term) ? "" : "none";
+      });
+    }
+
+    // -------------------------------------------------------------------------
+    // WHATSAPP LINK GENERATORS
+    // -------------------------------------------------------------------------
+    function cleanPhone(phone) {
+      let p = String(phone || "").replace(/[^\d]/g, "");
+      if (p.length === 10) p = "91" + p;
+      return p;
+    }
+
+    function getWhatsAppInviteUrl(team, link) {
+      const phone = cleanPhone(team.leader_phone);
+      const msg = 
+`Hello *${team.leader_name}* (Team: *${team.team_name}*),
+Greetings from GTU-ITR IIC Cell!
+
+Please mark your team's Smart India Hackathon (SIH 2026) attendance and upload your group selfie using your team's dedicated link:
+🔗 ${link}
+
+_Please submit your attendance promptly at the venue._`;
+
+      return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+    }
+
+    function getWhatsAppReminderUrl(team, link) {
+      const phone = cleanPhone(team.leader_phone);
+      const msg = 
+`⚠️ *REMINDER — SIH 2026 Hackathon Attendance*
+Team: *${team.team_name}* | Leader: *${team.leader_name}*
+
+Your team attendance is still *PENDING*. Please open your link, mark present members, and upload your live group selfie right now:
+🔗 ${link}
+
+— GTU-ITR IIC & R&D Cell`;
+
+      return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+    }
+
+    // -------------------------------------------------------------------------
+    // FORWARDING & MODALS
+    // -------------------------------------------------------------------------
+    function forwardTeamAttendanceToAdmin(regId) {
+      const team = SIH_TEAMS_DATA.find(t => t.reg_id === regId);
+      const att = attendanceRecordsMap[regId];
+      if (!team || !att) return;
+
+      let memberText = "";
+      if (att.members_presence) {
+        att.members_presence.forEach((m, i) => {
+          const statusSym = m.status === "present" ? "PRESENT ✅" : "ABSENT ❌";
+          memberText += `👤 ${i+1}. *${m.name}* (${m.enrollment}) — ${statusSym}\n`;
+        });
+      }
+
+      const msg = 
+`📋 *SIH 2026 Internal Hackathon - Team Attendance*
+━━━━━━━━━━━━━━━━━━━━━━━
+👥 *Team:* ${team.team_name}
+🆔 *Reg ID:* ${team.reg_id}
+💡 *PSID:* ${team.psid} (${team.theme || "Software"})
+👑 *Leader:* ${team.leader_name} (${team.leader_phone || "-"})
+
+📊 *Attendance:* ${att.present_count} / ${att.total_members} Present
+━━━━━━━━━━━━━━━━━━━━━━━
+${memberText}
+⏰ *Time:* ${att.submitted_at_formatted || "Today"}
+📸 *Group Selfie:* Verified in Cloud Portal
+📍 *GTU-ITR IIC & R&D Cell*`;
+
+      window.open(`https://wa.me/${ADMIN_WA_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
+    }
+
+    function forwardMasterSummaryToWhatsApp() {
+      let presentCount = 0;
+      let pendingCount = 0;
+      let totalStudents = 0;
+      let presentStudents = 0;
+      let teamSummaryText = "";
+
+      SIH_TEAMS_DATA.forEach((t, i) => {
+        totalStudents += t.members.length;
+        const att = attendanceRecordsMap[t.reg_id];
+        if (att) {
+          presentCount++;
+          presentStudents += (att.present_count || 0);
+          teamSummaryText += `✅ ${i+1}. *${t.team_name}* — ${att.present_count}/${att.total_members} Present (${att.submitted_at_formatted || "Done"})\n`;
+        } else {
+          pendingCount++;
+          teamSummaryText += `⏳ ${i+1}. *${t.team_name}* (Leader: ${t.leader_name}) — PENDING\n`;
+        }
+      });
+
+      const msg = 
+`📊 *GTU-ITR SIH 2026 — MASTER ATTENDANCE REPORT*
+━━━━━━━━━━━━━━━━━━━━━━━
+🏛️ *Gujarat Technological University (GTU-ITR)*
+🏢 *IIC & R&D Cell — Internal Hackathon 2026*
+⏰ *Generated:* ${new Date().toLocaleString("en-IN")}
+
+📈 *OVERVIEW:*
+• Total Registered Teams: *${SIH_TEAMS_DATA.length}*
+• Attendance Completed: *${presentCount} Teams* ✅
+• Attendance Pending: *${pendingCount} Teams* ⏳
+• Total Students Present: *${presentStudents} / ${totalStudents}* 👥
+━━━━━━━━━━━━━━━━━━━━━━━
+📋 *TEAM-WISE ATTENDANCE STATUS:*
+${teamSummaryText}
+━━━━━━━━━━━━━━━━━━━━━━━
+_Report synchronized live from Google Cloud Firestore Standby._`;
+
+      window.open(`https://wa.me/${ADMIN_WA_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
+    }
+
+    function copyAllTeamLinks() {
+      let text = "📋 *GTU-ITR SIH 2026 — TEAM ATTENDANCE LINKS*\n━━━━━━━━━━━━━━━━━━━━━━━\n\n";
+      SIH_TEAMS_DATA.forEach((t, i) => {
+        text += `${i+1}. *${t.team_name}* (Leader: ${t.leader_name} - ${t.leader_phone})\n👉 ${getTeamAttendanceLink(t.reg_id)}\n\n`;
+      });
+
+      navigator.clipboard.writeText(text).then(() => {
+        showToast("All 9 Team Attendance Links copied to clipboard!");
+      });
+    }
+
+    function copyLink(link) {
+      navigator.clipboard.writeText(link).then(() => {
+        showToast("Team attendance link copied!");
+      });
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById("toast");
+      toast.textContent = msg;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 2600);
+    }
+
+    // Modal Handlers
+    function openSelfieModal(regId) {
+      const att = attendanceRecordsMap[regId];
+      const team = SIH_TEAMS_DATA.find(t => t.reg_id === regId);
+      if (!att || !att.selfie_image) return;
+
+      document.getElementById("selfieModalTitle").textContent = `${team ? team.team_name : regId} — Group Selfie`;
+      document.getElementById("selfieModalImg").src = att.selfie_image;
+      document.getElementById("selfieModalMeta").textContent = `Submitted: ${att.submitted_at_formatted || "Recently"}`;
+      document.getElementById("selfieDownloadBtn").href = att.selfie_image;
+      document.getElementById("selfieModal").classList.add("open");
+    }
+
+    function closeSelfieModal() {
+      document.getElementById("selfieModal").classList.remove("open");
+    }
+
+    function openDetailsModal(regId) {
+      const team = SIH_TEAMS_DATA.find(t => t.reg_id === regId);
+      const att = attendanceRecordsMap[regId];
+      if (!team) return;
+
+      document.getElementById("detailsModalTeam").textContent = team.team_name;
+      document.getElementById("detailsModalSub").textContent = `${team.reg_id} • PSID: ${team.psid} (${team.theme || "Software"})`;
+
+      const content = document.getElementById("detailsModalContent");
+      
+      let statusCard = `
+        <div style="background:#fffbeb; border:1px solid #fef3c7; border-radius:10px; padding:12px; font-size:13px; color:#b45309; font-weight:700;">
+          ⏳ Attendance has NOT been marked by this team yet.
+        </div>
+      `;
+
+      if (att) {
+        let membersHtml = "";
+        if (att.members_presence) {
+          membersHtml = att.members_presence.map((m, i) => `
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 12px; background:#f8fafc; border-radius:8px; border:1px solid var(--border-color);">
+              <div>
+                <strong>${escapeHtml(m.name)}</strong>
+                <span style="font-size:11px; color:var(--text-muted); font-family:monospace; margin-left:6px;">(${escapeHtml(m.enrollment)})</span>
+              </div>
+              <span class="badge ${m.status==='present'?'badge--present':'badge--pending'}">
+                ${m.status==='present'?'PRESENT':'ABSENT'}
+              </span>
+            </div>
+          `).join("");
+        }
+
+        statusCard = `
+          <div style="background:#ecfdf5; border:1px solid #a7f3d0; border-radius:10px; padding:12px; font-size:13px; color:#065f46;">
+            <strong>✅ Attendance Recorded on:</strong> ${att.submitted_at_formatted || "Recently"}
+            <br><strong>Status:</strong> ${att.present_count} of ${att.total_members} Members Present
+            ${att.remarks ? `<br><strong>Remarks:</strong> ${escapeHtml(att.remarks)}` : ''}
+          </div>
+          <div style="font-weight:700; font-size:13px; margin-top:8px;">Member Attendance Breakdown:</div>
+          <div style="display:flex; flex-direction:column; gap:6px;">
+            ${membersHtml}
+          </div>
+        `;
+      }
+
+      content.innerHTML = statusCard;
+
+      const waBtn = document.getElementById("detailsForwardWaBtn");
+      waBtn.onclick = () => forwardTeamAttendanceToAdmin(regId);
+
+      document.getElementById("detailsModal").classList.add("open");
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function closeDetailsModal() {
+      document.getElementById("detailsModal").classList.remove("open");
+    }
+
+    // Excel Export
+    function exportAttendanceToExcel() {
+      const rows = [];
+      SIH_TEAMS_DATA.forEach(team => {
+        const att = attendanceRecordsMap[team.reg_id];
+        team.members.forEach(m => {
+          let status = "Pending";
+          if (att && att.members_presence) {
+            const found = att.members_presence.find(x => x.enrollment === m.enrollment);
+            status = found ? found.status.toUpperCase() : (att ? "PRESENT" : "PENDING");
+          }
+
+          rows.push({
+            "Registration ID": team.reg_id,
+            "Team Name": team.team_name,
+            "PSID": team.psid,
+            "Theme": team.theme || "",
+            "Student Name": m.name,
+            "Enrollment No": m.enrollment,
+            "Role": m.role,
+            "Branch": m.branch || "",
+            "Attendance Status": status,
+            "Submission Timestamp": att ? (att.submitted_at_formatted || att.submitted_at) : "-"
+          });
+        });
+      });
+
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "SIH_Attendance");
+      XLSX.writeFile(wb, `GTU_ITR_SIH2026_Attendance_${new Date().toISOString().split("T")[0]}.xlsx`);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return "";
+      return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+  </script>
+</body>
+</html>

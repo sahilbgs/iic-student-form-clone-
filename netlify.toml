@@ -8,7 +8,17 @@
     X-XSS-Protection = "1; mode=block"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
-    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    Permissions-Policy = "camera=(self), geolocation=(self), microphone=()"
+
+[[redirects]]
+  from = "/attendance"
+  to = "/attendance.html"
+  status = 200
+
+[[redirects]]
+  from = "/attendance-admin"
+  to = "/attendance-admin.html"
+  status = 200
 
 [[redirects]]
   from = "/register"
