@@ -2790,19 +2790,23 @@
         console.warn("PostgreSQL attendance fetch note:", e);
       }
 
-      // 1. LocalStorage
+      // 1. LocalStorage (only fallback for missing records)
       try {
         const local = JSON.parse(localStorage.getItem("gtu_all_attendance") || "{}");
-        Object.assign(attendanceRecordsMap, local);
+        Object.keys(local).forEach(k => {
+          if (!attendanceRecordsMap[k]) {
+            attendanceRecordsMap[k] = local[k];
+          }
+        });
       } catch (e) {}
 
-      // 2. Firestore SDK
+      // 2. Firestore SDK (only fallback for missing records)
       if (window.db) {
         try {
           const snap = await window.db.collection("sih_attendance").get();
           snap.forEach(doc => {
             const data = doc.data();
-            if (data.reg_id) {
+            if (data.reg_id && !attendanceRecordsMap[data.reg_id]) {
               attendanceRecordsMap[data.reg_id] = data;
             }
           });
@@ -2875,9 +2879,13 @@
 
         let statusHtml = `<span class="badge badge--pending"><i data-lucide="clock" style="width:12px;height:12px;"></i> Pending</span>`;
         if (isMarked) {
+          const actualPresent = (Array.isArray(att.members_presence) && att.members_presence.length > 0)
+            ? att.members_presence.filter(m => m.status === 'present').length
+            : (parseInt(att.present_count, 10) || 0);
+          const totalCount = att.total_members || (team.members ? team.members.length : 6);
           statusHtml = `
             <div>
-              <span class="badge badge--present"><i data-lucide="check-circle" style="width:12px;height:12px;"></i> ${att.present_count}/${att.total_members} Present</span>
+              <span class="badge badge--present"><i data-lucide="check-circle" style="width:12px;height:12px;"></i> ${actualPresent}/${totalCount} Present</span>
               <div style="font-size:10.5px; color:var(--text-muted); margin-top:2px;">${att.submitted_at_formatted || ""}</div>
             </div>
           `;
@@ -2960,7 +2968,10 @@
         const att = getTeamAttendanceRecord(t);
         if (att) {
           completed++;
-          studentsPresent += (parseInt(att.present_count, 10) || 0);
+          const count = (Array.isArray(att.members_presence) && att.members_presence.length > 0)
+            ? att.members_presence.filter(m => m.status === 'present').length
+            : (parseInt(att.present_count, 10) || 0);
+          studentsPresent += count;
         }
       });
 
