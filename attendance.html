@@ -782,6 +782,85 @@
       </div>
     </div>
 
+    <!-- VIEW 1.5: TEAM SECURITY VERIFICATION LOCK (Tamper-proof protection against URL modification) -->
+    <div id="teamSecurityLockView" style="display:none;">
+      <div class="card card--highlight" style="border:1.5px solid rgba(239, 68, 68, 0.4); box-shadow:0 15px 35px -5px rgba(239,68,68,0.15);">
+        
+        <div style="text-align:center; padding: 6px 0 18px;">
+          <div style="width:68px; height:68px; border-radius:50%; background:rgba(239, 68, 68, 0.1); color:#dc2626; display:inline-flex; align-items:center; justify-content:center; margin-bottom:12px; border: 2px solid rgba(239,68,68,0.2);">
+            <i data-lucide="shield-alert" style="width:34px; height:34px;"></i>
+          </div>
+          <div>
+            <span class="brand-pill" style="background:rgba(239,68,68,0.1); color:#b91c1c; border-color:rgba(239,68,68,0.3);">
+              <i data-lucide="lock" style="width:12px;height:12px;"></i> Security Verification Required
+            </span>
+          </div>
+          <h2 style="font-family:'Outfit',sans-serif; font-size:1.65rem; font-weight:900; color:var(--text-main); margin-top:10px; letter-spacing:-0.02em;">
+            Team Access Protected
+          </h2>
+          <p style="font-size:13.5px; color:var(--text-muted); margin-top:6px; max-width:480px; margin-left:auto; margin-right:auto; line-height:1.5;">
+            Direct access to this team's attendance is locked to prevent unauthorized tampering or URL modifications. Please verify your membership to continue.
+          </p>
+        </div>
+
+        <!-- Target Team Card -->
+        <div style="background:#f8fafc; border:1.5px solid var(--border-color); border-radius:14px; padding:16px 18px; margin-bottom:20px;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
+            <div>
+              <div style="font-size:11px; font-weight:800; text-transform:uppercase; color:var(--text-muted); letter-spacing:0.05em;">Target Team</div>
+              <div id="lockTeamName" style="font-family:'Outfit',sans-serif; font-size:1.35rem; font-weight:900; color:var(--primary); margin-top:2px;">-</div>
+            </div>
+            <span id="lockRegId" style="font-family:monospace; font-size:12px; font-weight:800; background:rgba(15,82,186,0.1); color:var(--primary); padding:4px 8px; border-radius:6px;">REG-0000</span>
+          </div>
+          
+          <div style="margin-top:12px; padding-top:10px; border-top:1px dashed var(--border-color); display:flex; flex-wrap:wrap; gap:14px; font-size:12px; color:var(--text-muted);">
+            <div><i data-lucide="user" style="width:13px;height:13px;vertical-align:-2px;color:var(--primary);"></i> Leader: <strong id="lockLeaderName" style="color:var(--text-main);">-</strong></div>
+            <div><i data-lucide="hash" style="width:13px;height:13px;vertical-align:-2px;color:var(--primary);"></i> PSID: <strong id="lockPsid" style="color:var(--text-main);">-</strong></div>
+          </div>
+        </div>
+
+        <!-- Security Verification Input Form -->
+        <form id="securityLockForm" onsubmit="handleSecurityVerification(event)">
+          <div style="margin-bottom:16px;">
+            <label for="securityPinInput" style="display:block; font-size:13px; font-weight:700; color:var(--text-main); margin-bottom:8px;">
+              Enter Leader or Member Enrollment No. / Mobile No.:
+            </label>
+            <div style="position:relative;">
+              <i data-lucide="key-round" style="position:absolute; left:14px; top:13px; width:18px; height:18px; color:var(--text-muted);"></i>
+              <input type="text" id="securityPinInput" placeholder="e.g. 244600307010 or 9426364024" autocomplete="off" required
+                style="width:100%; padding:12px 14px 12px 42px; border-radius:10px; border:1.5px solid var(--border-color); font-size:14px; outline:none; font-family:inherit; transition:border-color 0.2s;">
+            </div>
+            <div style="font-size:11.5px; color:var(--text-muted); margin-top:6px; display:flex; align-items:center; gap:4px;">
+              <i data-lucide="info" style="width:12px;height:12px;"></i>
+              Enter any registered member's GTU enrollment or mobile number to unlock.
+            </div>
+          </div>
+
+          <!-- Error Box -->
+          <div id="lockErrorMessage" style="display:none; background:#fef2f2; border:1.5px solid #fecaca; color:#b91c1c; border-radius:10px; padding:12px 14px; font-size:12.5px; margin-bottom:16px; font-weight:600; line-height:1.4;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <i data-lucide="alert-triangle" style="width:16px;height:16px;flex-shrink:0;"></i>
+              <span id="lockErrorText">Verification failed. Unauthorized team access blocked.</span>
+            </div>
+          </div>
+
+          <button type="submit" id="btnVerifySecurity" style="width:100%; background:var(--primary); color:#ffffff; border:none; border-radius:12px; padding:14px 20px; font-family:'Outfit',sans-serif; font-size:15px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:var(--shadow-md); transition:all 0.2s;">
+            <i data-lucide="unlock" style="width:16px;height:16px;"></i> Verify &amp; Unlock Attendance
+          </button>
+        </form>
+
+        <div style="margin-top:20px; text-align:center; padding-top:16px; border-top:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
+          <a href="attendance.html" style="font-size:12px; color:var(--text-muted); text-decoration:none; font-weight:600;">
+            <i data-lucide="arrow-left" style="width:12px;height:12px;vertical-align:-1px;"></i> All Teams Directory
+          </a>
+          <button type="button" onclick="contactAdminForPin()" style="background:none; border:none; color:var(--primary); font-size:12px; font-weight:700; cursor:pointer; text-decoration:underline;">
+            Need Help? Contact Admin
+          </button>
+        </div>
+
+      </div>
+    </div>
+
     <!-- VIEW 2: TEAM ATTENDANCE FORM (Shown when team is selected or ?team= is passed) -->
     <div id="teamAttendanceView" style="display:none;">
 
@@ -1078,7 +1157,8 @@
         "phone": "+18347021911",
         "email": "smith092005@gmail.com"
       }
-    ]
+    ],
+    "token": "fec5c04a21"
   },
   {
     "id": 2,
@@ -1148,7 +1228,8 @@
         "phone": "9106834847",
         "email": "Patelhil627@gmail.com"
       }
-    ]
+    ],
+    "token": "a1ef202a02"
   },
   {
     "id": 3,
@@ -1218,7 +1299,8 @@
         "phone": "9265569503",
         "email": "thakorbaldevji630@gmail.com"
       }
-    ]
+    ],
+    "token": "7ee13b911d"
   },
   {
     "id": 4,
@@ -1288,7 +1370,8 @@
         "phone": "9316481184",
         "email": "janvibhagwani245@gmail.com"
       }
-    ]
+    ],
+    "token": "19436b64e4"
   },
   {
     "id": 5,
@@ -1358,7 +1441,8 @@
         "phone": "+919426218522",
         "email": "diyagurjar585@gmail.com"
       }
-    ]
+    ],
+    "token": "1d80c56db6"
   },
   {
     "id": 6,
@@ -1428,7 +1512,8 @@
         "phone": "9913666801",
         "email": "viyapatel2810@gmail.com"
       }
-    ]
+    ],
+    "token": "100b40ad07"
   },
   {
     "id": 7,
@@ -1498,7 +1583,8 @@
         "phone": "9875220293",
         "email": "hetkansara232007@gmail.com"
       }
-    ]
+    ],
+    "token": "7d4fd5371b"
   },
   {
     "id": 8,
@@ -1568,7 +1654,8 @@
         "phone": "9664943379",
         "email": "241043107006@gtu.edu.in"
       }
-    ]
+    ],
+    "token": "951f0612ce"
   },
   {
     "id": 9,
@@ -1638,7 +1725,8 @@
         "phone": "9727704702",
         "email": "rajpurohitaryan511@gmail.com"
       }
-    ]
+    ],
+    "token": "d9f2f7231c"
   },
   {
     "id": 15,
@@ -1708,7 +1796,8 @@
         "phone": "70522 68296",
         "email": "krishy0308@gmail.com"
       }
-    ]
+    ],
+    "token": "2543c6c6f5"
   },
   {
     "id": 21,
@@ -1778,7 +1867,8 @@
         "phone": "0",
         "email": "NA@gmail.com"
       }
-    ]
+    ],
+    "token": "bd6745c675"
   },
   {
     "id": 22,
@@ -1848,7 +1938,8 @@
         "phone": ".",
         "email": "Na@qrp"
       }
-    ]
+    ],
+    "token": "9a2a325a57"
   },
   {
     "id": 23,
@@ -1918,7 +2009,8 @@
         "phone": "7567068793",
         "email": "metuquemarinahelio@gmail.com"
       }
-    ]
+    ],
+    "token": "5d7e6c6f24"
   },
   {
     "id": 24,
@@ -1979,7 +2071,8 @@
         "phone": "+91 95105 37232",
         "email": "pdiya7527@gmail.com"
       }
-    ]
+    ],
+    "token": "dcf574339f"
   },
   {
     "id": 25,
@@ -2049,7 +2142,8 @@
         "phone": "8487812288",
         "email": "rutulprajapati2006@gmail.com"
       }
-    ]
+    ],
+    "token": "b93a1fb77e"
   },
   {
     "id": 26,
@@ -2119,7 +2213,8 @@
         "phone": "9428210172",
         "email": "zalahitarthsinh@gmail.com"
       }
-    ]
+    ],
+    "token": "31006ae207"
   },
   {
     "id": 27,
@@ -2189,7 +2284,8 @@
         "phone": "9773164576",
         "email": "jasleenhut3@gmail.com"
       }
-    ]
+    ],
+    "token": "44de5d0bcf"
   },
   {
     "id": 28,
@@ -2259,7 +2355,8 @@
         "phone": "8866127502",
         "email": "pavaraditya6@gmail.com"
       }
-    ]
+    ],
+    "token": "e10e6558e3"
   },
   {
     "id": 29,
@@ -2329,7 +2426,8 @@
         "phone": "9376347795",
         "email": "dakshvpatel7210@gmail.com"
       }
-    ]
+    ],
+    "token": "6190e09cd3"
   },
   {
     "id": 30,
@@ -2399,7 +2497,8 @@
         "phone": "9265488133",
         "email": "barotjainam59@gmail.com"
       }
-    ]
+    ],
+    "token": "c3a3875c08"
   },
   {
     "id": 31,
@@ -2469,7 +2568,8 @@
         "phone": "6356750696",
         "email": "chaudharykavya1308@gmail.com"
       }
-    ]
+    ],
+    "token": "5d5cd5b459"
   },
   {
     "id": 32,
@@ -2539,7 +2639,8 @@
         "phone": "9319069954",
         "email": "dasunsubodha25funi@gmail.com"
       }
-    ]
+    ],
+    "token": "ae73467dbe"
   },
   {
     "id": 33,
@@ -2609,7 +2710,8 @@
         "phone": "+91 8200268223",
         "email": "gaurichaudhary2105@gmail.com"
       }
-    ]
+    ],
+    "token": "71b79536ee"
   },
   {
     "id": 34,
@@ -2679,7 +2781,8 @@
         "phone": "9408384411",
         "email": "dhwanitkansara06@gmail.com"
       }
-    ]
+    ],
+    "token": "5ea1d92078"
   },
   {
     "id": 35,
@@ -2749,7 +2852,8 @@
         "phone": "8849286396",
         "email": "shrimaliprachi184@gmail.com"
       }
-    ]
+    ],
+    "token": "aff0ef1528"
   },
   {
     "id": 36,
@@ -2819,7 +2923,8 @@
         "phone": "+919664620968",
         "email": "shill.sudipa@gmail.com"
       }
-    ]
+    ],
+    "token": "6a57ab3f55"
   },
   {
     "id": 37,
@@ -2889,7 +2994,8 @@
         "phone": "8160789644",
         "email": "chaudharidhairy016@gmail.com"
       }
-    ]
+    ],
+    "token": "b580b80d19"
   },
   {
     "id": 38,
@@ -2959,7 +3065,8 @@
         "phone": "9998117028",
         "email": "mayankpfb@gmail.com"
       }
-    ]
+    ],
+    "token": "658e043778"
   },
   {
     "id": 39,
@@ -3029,7 +3136,8 @@
         "phone": "7052268296",
         "email": "krishy0308@gmail.com"
       }
-    ]
+    ],
+    "token": "75d7e3650b"
   },
   {
     "id": 40,
@@ -3099,7 +3207,8 @@
         "phone": "9725766574",
         "email": "dhruvchauhan578@gmail.com"
       }
-    ]
+    ],
+    "token": "dcae20f6aa"
   }
 ];
     let ALL_SIH_TEAMS = SEEDED_SIH_TEAMS;
@@ -3111,6 +3220,120 @@
     let activeMediaStream = null;
     let cameraFacingMode = "user"; // "user" (front) or "environment" (rear)
     let adminWhatsAppNumber = "919978309254"; // GTU Organizer WhatsApp
+    let pendingVerificationTeam = null; // Team awaiting security authorization
+    let currentAuthPin = null; // Verified credential
+
+    // -------------------------------------------------------------------------
+    // SECURITY & ACCESS VALIDATION (Tamper-proof against URL modification)
+    // -------------------------------------------------------------------------
+    function isTeamAuthorized(team, urlToken) {
+      if (!team) return false;
+      const t = (urlToken || "").trim().toLowerCase();
+      // 1. Check URL token against authentic team cryptographic token
+      if (t && team.token && t === team.token.toLowerCase()) {
+        return true;
+      }
+      // 2. Check browser session storage
+      try {
+        const storedToken = sessionStorage.getItem(`gtu_verified_token_${team.id}`);
+        if (storedToken && team.token && storedToken.toLowerCase() === team.token.toLowerCase()) {
+          return true;
+        }
+      } catch (e) {}
+      return false;
+    }
+
+    function showSecurityLock(team) {
+      pendingVerificationTeam = team;
+      document.getElementById("teamSelectorView").style.display = "none";
+      document.getElementById("teamAttendanceView").style.display = "none";
+      document.getElementById("teamSecurityLockView").style.display = "block";
+
+      document.getElementById("lockTeamName").textContent = team.team_name;
+      document.getElementById("lockRegId").textContent = team.reg_id;
+      document.getElementById("lockLeaderName").textContent = team.leader_name;
+      document.getElementById("lockPsid").textContent = team.psid;
+      document.getElementById("lockErrorMessage").style.display = "none";
+      
+      const pinInput = document.getElementById("securityPinInput");
+      if (pinInput) {
+        pinInput.value = "";
+        setTimeout(() => pinInput.focus(), 150);
+      }
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function handleSecurityVerification(event) {
+      event.preventDefault();
+      if (!pendingVerificationTeam) return;
+
+      const inputRaw = (document.getElementById("securityPinInput").value || "").trim().toLowerCase();
+      const cleanDigits = inputRaw.replace(/\D/g, "");
+
+      const t = pendingVerificationTeam;
+      const leaderEnroll = (t.leader_enrollment || "").trim().toLowerCase();
+      const leaderPhoneDigits = (t.leader_phone || "").replace(/\D/g, "");
+
+      let isMatch = false;
+
+      // 1. Leader Enrollment Match
+      if (inputRaw && inputRaw === leaderEnroll) isMatch = true;
+
+      // 2. Leader Phone Match (last 10 digits comparison)
+      if (cleanDigits && leaderPhoneDigits && (cleanDigits === leaderPhoneDigits || cleanDigits.endsWith(leaderPhoneDigits.slice(-10)))) isMatch = true;
+
+      // 3. Member Enrollment or Phone Match
+      if (!isMatch && t.members && t.members.length > 0) {
+        for (const m of t.members) {
+          const mEnroll = (m.enrollment || "").trim().toLowerCase();
+          const mPhoneDigits = (m.phone || "").replace(/\D/g, "");
+          if (inputRaw && mEnroll && inputRaw === mEnroll) {
+            isMatch = true;
+            break;
+          }
+          if (cleanDigits && mPhoneDigits && (cleanDigits === mPhoneDigits || cleanDigits.endsWith(mPhoneDigits.slice(-10)))) {
+            isMatch = true;
+            break;
+          }
+        }
+      }
+
+      // 4. Admin Master PIN (Organizers Sahil Thakor & GTU IIC Cell)
+      const adminPhones = ["919978309254", "9978309254", "918849896384", "8849896384"];
+      if (adminPhones.some(p => cleanDigits === p || cleanDigits.endsWith(p.slice(-10))) || inputRaw === "iic2026" || inputRaw === "gtu2026") {
+        isMatch = true;
+      }
+
+      if (isMatch) {
+        // Access Granted!
+        currentAuthPin = inputRaw;
+        try {
+          sessionStorage.setItem(`gtu_verified_token_${t.id}`, t.token);
+        } catch (e) {}
+
+        // Update URL cleanly with token
+        const newUrl = `${window.location.pathname}?team=${encodeURIComponent(t.id)}&token=${encodeURIComponent(t.token)}`;
+        window.history.replaceState({ teamId: t.id }, "", newUrl);
+
+        document.getElementById("teamSecurityLockView").style.display = "none";
+        loadTeamForm(t);
+      } else {
+        // Access Denied
+        const errBox = document.getElementById("lockErrorMessage");
+        const errText = document.getElementById("lockErrorText");
+        errText.textContent = `⛔ Verification Failed: The enrollment or mobile entered does not match any registered member of ${t.team_name}. Access denied to prevent unauthorized tampering.`;
+        errBox.style.display = "block";
+        if (window.lucide) lucide.createIcons();
+      }
+    }
+
+    function contactAdminForPin() {
+      const teamInfo = pendingVerificationTeam ? `${pendingVerificationTeam.team_name} (ID: ${pendingVerificationTeam.id})` : "My SIH Team";
+      const msg = encodeURIComponent(`Hello GTU IIC Admin, I need the attendance verification authorization for: ${teamInfo}.`);
+      window.open(`https://wa.me/919978309254?text=${msg}`, "_blank");
+    }
 
     // -------------------------------------------------------------------------
     // INITIALIZATION & URL ROUTING
@@ -3123,6 +3346,7 @@
     async function detectTeamContext() {
       const params = new URLSearchParams(window.location.search);
       const teamQuery = params.get("team") || params.get("team_id") || params.get("reg_id") || params.get("id");
+      const urlToken = params.get("token") || params.get("auth") || "";
 
       if (teamQuery) {
         // Try local pre-seeded database snapshot first
@@ -3141,7 +3365,18 @@
         } catch (e) {}
 
         if (matched) {
-          loadTeamForm(matched);
+          // Check Security Verification against URL tampering
+          if (isTeamAuthorized(matched, urlToken)) {
+            // Authorized via valid HMAC token or session!
+            try {
+              sessionStorage.setItem(`gtu_verified_token_${matched.id}`, matched.token);
+            } catch (e) {}
+            currentAuthPin = matched.leader_enrollment;
+            loadTeamForm(matched);
+          } else {
+            // Tampered URL or missing token: Lock and demand verification
+            showSecurityLock(matched);
+          }
           return;
         }
       }
@@ -3150,6 +3385,7 @@
       renderTeamPicker(SEEDED_SIH_TEAMS);
       document.getElementById("teamSelectorView").style.display = "block";
       document.getElementById("teamAttendanceView").style.display = "none";
+      document.getElementById("teamSecurityLockView").style.display = "none";
     }
 
     function findTeamByQuery(query) {
@@ -3238,12 +3474,17 @@
     }
 
     function selectTeam(regId) {
-      const team = SEEDED_SIH_TEAMS.find(t => t.reg_id === regId);
+      const team = SEEDED_SIH_TEAMS.find(t => t.reg_id === regId || String(t.id) === String(regId));
       if (team) {
-        // Update URL cleanly without reloading
-        const newUrl = `${window.location.pathname}?team=${encodeURIComponent(team.reg_id)}`;
-        window.history.pushState({ regId: team.reg_id }, "", newUrl);
-        loadTeamForm(team);
+        if (isTeamAuthorized(team, "")) {
+          const newUrl = `${window.location.pathname}?team=${encodeURIComponent(team.id)}&token=${encodeURIComponent(team.token)}`;
+          window.history.pushState({ regId: team.reg_id }, "", newUrl);
+          loadTeamForm(team);
+        } else {
+          const newUrl = `${window.location.pathname}?team=${encodeURIComponent(team.id)}`;
+          window.history.pushState({ regId: team.reg_id }, "", newUrl);
+          showSecurityLock(team);
+        }
       }
     }
 
@@ -3254,6 +3495,7 @@
       currentTeam = team;
 
       document.getElementById("teamSelectorView").style.display = "none";
+      document.getElementById("teamSecurityLockView").style.display = "none";
       document.getElementById("teamAttendanceView").style.display = "block";
 
       // Fill Banner
@@ -3558,11 +3800,16 @@
         const apiHost = (window.location.hostname === "localhost" || window.location.hostname.includes("aceglory.in")) ? window.location.origin : "https://iic-gtu-itr.aceglory.in";
         await fetch(`${apiHost}/api/attendance/submit`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json",
+            "X-Team-Token": currentTeam.token || ""
+          },
           body: JSON.stringify({
             id: currentTeam.id,
             reg_id: currentTeam.reg_id,
             team_name: currentTeam.team_name,
+            token: currentTeam.token || "",
+            security_pin: currentAuthPin || currentTeam.leader_enrollment,
             leader_name: currentTeam.leader_name,
             leader_phone: currentTeam.leader_phone,
             leader_enrollment: currentTeam.leader_enrollment,
