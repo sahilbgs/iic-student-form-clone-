@@ -2776,7 +2776,7 @@
       const dir = pathname.includes("/static") ? "/static" : (pathname.substring(0, pathname.lastIndexOf("/")) || "");
       const teamId = team ? team.id : teamOrId;
       const token = (team && team.token) ? team.token : "";
-      return `${origin}${dir}/attendance.html?team=${encodeURIComponent(teamId)}${token ? '&token=' + encodeURIComponent(token) : ''}`;
+      return `${origin}${dir}/attendance.html?v=2&team=${encodeURIComponent(teamId)}${token ? '&token=' + encodeURIComponent(token) : ''}`;
     }
 
     function renderTable(teams) {

@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>SIH 2026 — Team Attendance & Group Selfie Portal | GTU-ITR IIC</title>
   
   <!-- Modern Typography & Icons -->
@@ -786,53 +789,48 @@
     <div id="teamSecurityLockView" style="display:none;">
       <div class="card card--highlight" style="border:1.5px solid rgba(239, 68, 68, 0.4); box-shadow:0 15px 35px -5px rgba(239,68,68,0.15);">
         
-        <div style="text-align:center; padding: 6px 0 18px;">
-          <div style="width:68px; height:68px; border-radius:50%; background:rgba(239, 68, 68, 0.1); color:#dc2626; display:inline-flex; align-items:center; justify-content:center; margin-bottom:12px; border: 2px solid rgba(239,68,68,0.2);">
-            <i data-lucide="shield-alert" style="width:34px; height:34px;"></i>
+        <div style="text-align:center; padding: 6px 0 16px;">
+          <div style="width:64px; height:64px; border-radius:50%; background:rgba(239, 68, 68, 0.1); color:#dc2626; display:inline-flex; align-items:center; justify-content:center; margin-bottom:12px; border: 2px solid rgba(239,68,68,0.25);">
+            <i data-lucide="shield-alert" style="width:32px; height:32px;"></i>
           </div>
           <div>
             <span class="brand-pill" style="background:rgba(239,68,68,0.1); color:#b91c1c; border-color:rgba(239,68,68,0.3);">
-              <i data-lucide="lock" style="width:12px;height:12px;"></i> Security Verification Required
+              <i data-lucide="lock" style="width:12px;height:12px;"></i> Tamper-Proof Security Active
             </span>
           </div>
           <h2 style="font-family:'Outfit',sans-serif; font-size:1.65rem; font-weight:900; color:var(--text-main); margin-top:10px; letter-spacing:-0.02em;">
-            Team Access Protected
+            Unauthorized Team Access Blocked
           </h2>
           <p style="font-size:13.5px; color:var(--text-muted); margin-top:6px; max-width:480px; margin-left:auto; margin-right:auto; line-height:1.5;">
-            Direct access to this team's attendance is locked to prevent unauthorized tampering or URL modifications. Please verify your membership to continue.
+            URL tampering or changing the team number is strictly blocked. You cannot view or submit attendance for another team.
           </p>
         </div>
 
-        <!-- Target Team Card -->
-        <div style="background:#f8fafc; border:1.5px solid var(--border-color); border-radius:14px; padding:16px 18px; margin-bottom:20px;">
-          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
-            <div>
-              <div style="font-size:11px; font-weight:800; text-transform:uppercase; color:var(--text-muted); letter-spacing:0.05em;">Target Team</div>
-              <div id="lockTeamName" style="font-family:'Outfit',sans-serif; font-size:1.35rem; font-weight:900; color:var(--primary); margin-top:2px;">-</div>
-            </div>
-            <span id="lockRegId" style="font-family:monospace; font-size:12px; font-weight:800; background:rgba(15,82,186,0.1); color:var(--primary); padding:4px 8px; border-radius:6px;">REG-0000</span>
+        <!-- Warning Alert Banner (NO other team details disclosed!) -->
+        <div style="background:#fff1f2; border:1.5px solid #fecdd3; border-radius:14px; padding:14px 16px; margin-bottom:20px;">
+          <div style="display:flex; align-items:center; gap:8px; color:#be123c; font-weight:800; font-size:13.5px;">
+            <i data-lucide="alert-octagon" style="width:18px;height:18px;flex-shrink:0;"></i>
+            <span>Team Access Verification Required</span>
           </div>
-          
-          <div style="margin-top:12px; padding-top:10px; border-top:1px dashed var(--border-color); display:flex; flex-wrap:wrap; gap:14px; font-size:12px; color:var(--text-muted);">
-            <div><i data-lucide="user" style="width:13px;height:13px;vertical-align:-2px;color:var(--primary);"></i> Leader: <strong id="lockLeaderName" style="color:var(--text-main);">-</strong></div>
-            <div><i data-lucide="hash" style="width:13px;height:13px;vertical-align:-2px;color:var(--primary);"></i> PSID: <strong id="lockPsid" style="color:var(--text-main);">-</strong></div>
-          </div>
+          <p style="font-size:12px; color:#9f1239; margin-top:4px; line-height:1.4;">
+            To open your team's attendance portal, please enter your registered <strong>GTU Enrollment Number</strong> or <strong>Mobile Number</strong> below:
+          </p>
         </div>
 
         <!-- Security Verification Input Form -->
         <form id="securityLockForm" onsubmit="handleSecurityVerification(event)">
           <div style="margin-bottom:16px;">
             <label for="securityPinInput" style="display:block; font-size:13px; font-weight:700; color:var(--text-main); margin-bottom:8px;">
-              Enter Leader or Member Enrollment No. / Mobile No.:
+              Enter Your Registered Enrollment No. or Mobile No.:
             </label>
             <div style="position:relative;">
-              <i data-lucide="key-round" style="position:absolute; left:14px; top:13px; width:18px; height:18px; color:var(--text-muted);"></i>
+              <i data-lucide="user-check" style="position:absolute; left:14px; top:13px; width:18px; height:18px; color:var(--text-muted);"></i>
               <input type="text" id="securityPinInput" placeholder="e.g. 244600307010 or 9426364024" autocomplete="off" required
                 style="width:100%; padding:12px 14px 12px 42px; border-radius:10px; border:1.5px solid var(--border-color); font-size:14px; outline:none; font-family:inherit; transition:border-color 0.2s;">
             </div>
             <div style="font-size:11.5px; color:var(--text-muted); margin-top:6px; display:flex; align-items:center; gap:4px;">
               <i data-lucide="info" style="width:12px;height:12px;"></i>
-              Enter any registered member's GTU enrollment or mobile number to unlock.
+              The system will automatically find your team and securely open your attendance sheet.
             </div>
           </div>
 
@@ -840,18 +838,18 @@
           <div id="lockErrorMessage" style="display:none; background:#fef2f2; border:1.5px solid #fecaca; color:#b91c1c; border-radius:10px; padding:12px 14px; font-size:12.5px; margin-bottom:16px; font-weight:600; line-height:1.4;">
             <div style="display:flex; align-items:center; gap:8px;">
               <i data-lucide="alert-triangle" style="width:16px;height:16px;flex-shrink:0;"></i>
-              <span id="lockErrorText">Verification failed. Unauthorized team access blocked.</span>
+              <span id="lockErrorText">Enrollment or Mobile not found in registered teams.</span>
             </div>
           </div>
 
           <button type="submit" id="btnVerifySecurity" style="width:100%; background:var(--primary); color:#ffffff; border:none; border-radius:12px; padding:14px 20px; font-family:'Outfit',sans-serif; font-size:15px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:var(--shadow-md); transition:all 0.2s;">
-            <i data-lucide="unlock" style="width:16px;height:16px;"></i> Verify &amp; Unlock Attendance
+            <i data-lucide="unlock" style="width:16px;height:16px;"></i> Verify &amp; Open My Team Attendance
           </button>
         </form>
 
         <div style="margin-top:20px; text-align:center; padding-top:16px; border-top:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
-          <a href="attendance.html" style="font-size:12px; color:var(--text-muted); text-decoration:none; font-weight:600;">
-            <i data-lucide="arrow-left" style="width:12px;height:12px;vertical-align:-1px;"></i> All Teams Directory
+          <a href="attendance.html?v=2" style="font-size:12px; color:var(--text-muted); text-decoration:none; font-weight:600;">
+            <i data-lucide="arrow-left" style="width:12px;height:12px;vertical-align:-1px;"></i> Clear &amp; Refresh
           </a>
           <button type="button" onclick="contactAdminForPin()" style="background:none; border:none; color:var(--primary); font-size:12px; font-weight:700; cursor:pointer; text-decoration:underline;">
             Need Help? Contact Admin
@@ -3249,10 +3247,6 @@
       document.getElementById("teamAttendanceView").style.display = "none";
       document.getElementById("teamSecurityLockView").style.display = "block";
 
-      document.getElementById("lockTeamName").textContent = team.team_name;
-      document.getElementById("lockRegId").textContent = team.reg_id;
-      document.getElementById("lockLeaderName").textContent = team.leader_name;
-      document.getElementById("lockPsid").textContent = team.psid;
       document.getElementById("lockErrorMessage").style.display = "none";
       
       const pinInput = document.getElementById("securityPinInput");
@@ -3265,73 +3259,75 @@
       if (window.lucide) lucide.createIcons();
     }
 
-    function handleSecurityVerification(event) {
-      event.preventDefault();
-      if (!pendingVerificationTeam) return;
+    function findTeamByEnrollmentOrPhone(pin) {
+      if (!pin) return null;
+      const cleanPin = String(pin).trim().toLowerCase();
+      const cleanDigits = cleanPin.replace(/\D/g, "");
 
-      const inputRaw = (document.getElementById("securityPinInput").value || "").trim().toLowerCase();
-      const cleanDigits = inputRaw.replace(/\D/g, "");
+      for (const t of SEEDED_SIH_TEAMS) {
+        const lEnroll = (t.leader_enrollment || "").trim().toLowerCase();
+        const lPhone = (t.leader_phone || "").replace(/\D/g, "");
 
-      const t = pendingVerificationTeam;
-      const leaderEnroll = (t.leader_enrollment || "").trim().toLowerCase();
-      const leaderPhoneDigits = (t.leader_phone || "").replace(/\D/g, "");
+        if (cleanPin === lEnroll) return t;
+        if (cleanDigits && lPhone && (cleanDigits === lPhone || cleanDigits.endsWith(lPhone.slice(-10)))) return t;
 
-      let isMatch = false;
+        if (t.members && t.members.length > 0) {
+          for (const m of t.members) {
+            const mEnroll = (m.enrollment || "").trim().toLowerCase();
+            const mPhone = (m.phone || "").replace(/\D/g, "");
 
-      // 1. Leader Enrollment Match
-      if (inputRaw && inputRaw === leaderEnroll) isMatch = true;
-
-      // 2. Leader Phone Match (last 10 digits comparison)
-      if (cleanDigits && leaderPhoneDigits && (cleanDigits === leaderPhoneDigits || cleanDigits.endsWith(leaderPhoneDigits.slice(-10)))) isMatch = true;
-
-      // 3. Member Enrollment or Phone Match
-      if (!isMatch && t.members && t.members.length > 0) {
-        for (const m of t.members) {
-          const mEnroll = (m.enrollment || "").trim().toLowerCase();
-          const mPhoneDigits = (m.phone || "").replace(/\D/g, "");
-          if (inputRaw && mEnroll && inputRaw === mEnroll) {
-            isMatch = true;
-            break;
-          }
-          if (cleanDigits && mPhoneDigits && (cleanDigits === mPhoneDigits || cleanDigits.endsWith(mPhoneDigits.slice(-10)))) {
-            isMatch = true;
-            break;
+            if (cleanPin === mEnroll) return t;
+            if (cleanDigits && mPhone && (cleanDigits === mPhone || cleanDigits.endsWith(mPhone.slice(-10)))) return t;
           }
         }
       }
+      return null;
+    }
 
-      // 4. Admin Master PIN (Organizers Sahil Thakor & GTU IIC Cell)
+    function handleSecurityVerification(event) {
+      event.preventDefault();
+      const pin = (document.getElementById("securityPinInput").value || "").trim().toLowerCase();
+      const cleanDigits = pin.replace(/\D/g, "");
+
+      // 1. Admin Master PIN (Organizers Sahil Thakor & GTU IIC Cell)
       const adminPhones = ["919978309254", "9978309254", "918849896384", "8849896384"];
-      if (adminPhones.some(p => cleanDigits === p || cleanDigits.endsWith(p.slice(-10))) || inputRaw === "iic2026" || inputRaw === "gtu2026") {
-        isMatch = true;
+      if (adminPhones.some(p => cleanDigits === p || cleanDigits.endsWith(p.slice(-10))) || pin === "iic2026" || pin === "gtu2026") {
+        const target = pendingVerificationTeam || SEEDED_SIH_TEAMS[0];
+        currentAuthPin = "ADMIN";
+        try {
+          sessionStorage.setItem(`gtu_verified_token_${target.id}`, target.token);
+        } catch (e) {}
+        const newUrl = `${window.location.pathname}?v=2&team=${encodeURIComponent(target.id)}&token=${encodeURIComponent(target.token)}`;
+        window.history.replaceState({ teamId: target.id }, "", newUrl);
+        document.getElementById("teamSecurityLockView").style.display = "none";
+        loadTeamForm(target);
+        return;
       }
 
-      if (isMatch) {
-        // Access Granted!
-        currentAuthPin = inputRaw;
+      // 2. Lookup genuine team by student credentials
+      const userTeam = findTeamByEnrollmentOrPhone(pin);
+      if (userTeam) {
+        currentAuthPin = pin;
         try {
-          sessionStorage.setItem(`gtu_verified_token_${t.id}`, t.token);
+          sessionStorage.setItem(`gtu_verified_token_${userTeam.id}`, userTeam.token);
         } catch (e) {}
 
-        // Update URL cleanly with token
-        const newUrl = `${window.location.pathname}?team=${encodeURIComponent(t.id)}&token=${encodeURIComponent(t.token)}`;
-        window.history.replaceState({ teamId: t.id }, "", newUrl);
+        const newUrl = `${window.location.pathname}?v=2&team=${encodeURIComponent(userTeam.id)}&token=${encodeURIComponent(userTeam.token)}`;
+        window.history.replaceState({ teamId: userTeam.id }, "", newUrl);
 
         document.getElementById("teamSecurityLockView").style.display = "none";
-        loadTeamForm(t);
+        loadTeamForm(userTeam);
       } else {
-        // Access Denied
         const errBox = document.getElementById("lockErrorMessage");
         const errText = document.getElementById("lockErrorText");
-        errText.textContent = `⛔ Verification Failed: The enrollment or mobile entered does not match any registered member of ${t.team_name}. Access denied to prevent unauthorized tampering.`;
+        errText.textContent = "⛔ Verification Failed: Enrollment or Mobile number not registered in GTU-ITR SIH 2026. Access is blocked.";
         errBox.style.display = "block";
         if (window.lucide) lucide.createIcons();
       }
     }
 
     function contactAdminForPin() {
-      const teamInfo = pendingVerificationTeam ? `${pendingVerificationTeam.team_name} (ID: ${pendingVerificationTeam.id})` : "My SIH Team";
-      const msg = encodeURIComponent(`Hello GTU IIC Admin, I need the attendance verification authorization for: ${teamInfo}.`);
+      const msg = encodeURIComponent("Hello GTU IIC Admin, I need authorization to open our team attendance portal.");
       window.open(`https://wa.me/919978309254?text=${msg}`, "_blank");
     }
 
@@ -3346,28 +3342,27 @@
     async function detectTeamContext() {
       const params = new URLSearchParams(window.location.search);
       const teamQuery = params.get("team") || params.get("team_id") || params.get("reg_id") || params.get("id");
-      const urlToken = params.get("token") || params.get("auth") || "";
+      const urlToken = params.get("token") || params.get("auth") || params.get("t") || "";
 
+      // 1. Direct Secret Token Access (?t=... or ?token=...)
+      if (urlToken && !teamQuery) {
+        const teamByToken = SEEDED_SIH_TEAMS.find(t => t.token && t.token.toLowerCase() === urlToken.toLowerCase());
+        if (teamByToken) {
+          try {
+            sessionStorage.setItem(`gtu_verified_token_${teamByToken.id}`, teamByToken.token);
+          } catch (e) {}
+          currentAuthPin = teamByToken.leader_enrollment;
+          loadTeamForm(teamByToken);
+          return;
+        }
+      }
+
+      // 2. Team Query (e.g. ?team=4)
       if (teamQuery) {
-        // Try local pre-seeded database snapshot first
         let matched = findTeamByQuery(teamQuery);
 
-        // Also fetch from live PostgreSQL API if available
-        try {
-          const apiHost = (window.location.hostname === "localhost" || window.location.hostname.includes("aceglory.in")) ? window.location.origin : "https://iic-gtu-itr.aceglory.in";
-          const res = await fetch(`${apiHost}/api/attendance/team/${encodeURIComponent(teamQuery)}`);
-          if (res.ok) {
-            const apiData = await res.json();
-            if (apiData.success && apiData.team) {
-              matched = apiData.team;
-            }
-          }
-        } catch (e) {}
-
         if (matched) {
-          // Check Security Verification against URL tampering
           if (isTeamAuthorized(matched, urlToken)) {
-            // Authorized via valid HMAC token or session!
             try {
               sessionStorage.setItem(`gtu_verified_token_${matched.id}`, matched.token);
             } catch (e) {}
@@ -3381,7 +3376,7 @@
         }
       }
 
-      // If no query or not found, show Team Picker View
+      // 3. If no query or not found, show Team Picker View
       renderTeamPicker(SEEDED_SIH_TEAMS);
       document.getElementById("teamSelectorView").style.display = "block";
       document.getElementById("teamAttendanceView").style.display = "none";
