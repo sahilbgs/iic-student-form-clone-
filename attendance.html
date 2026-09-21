@@ -939,7 +939,7 @@
           <button type="button" class="btn-quick" onclick="forwardExistingAttendance()" style="background:#25D366; color:#fff; border-color:#25D366;">
             <i data-lucide="share-2" style="width:13px;height:13px;"></i> Forward on WhatsApp (+91 9978309254)
           </button>
-          <button type="button" class="btn-quick" onclick="enableReEdit()">
+          <button type="button" class="btn-quick" id="btnEditAttendance" onclick="enableReEdit()">
             <i data-lucide="edit-3" style="width:13px;height:13px;"></i> Edit / Re-take Photo
           </button>
         </div>
@@ -3587,6 +3587,18 @@
     // -------------------------------------------------------------------------
     async function loadTeamForm(team) {
       currentTeam = team;
+      isAttendancePermanentlyLocked = false;
+      lockFormInputs(false);
+      resetSelfie();
+
+      const alertBox = document.getElementById("alreadyMarkedAlert");
+      if (alertBox) alertBox.style.display = "none";
+      const editBtn = document.getElementById("btnEditAttendance");
+      if (editBtn) editBtn.style.display = "inline-flex";
+      const remarksEl = document.getElementById("attendanceRemarks");
+      if (remarksEl) remarksEl.value = "";
+      const photoContainer = document.getElementById("alreadyMarkedPhotoContainer");
+      if (photoContainer) photoContainer.style.display = "none";
 
       document.getElementById("teamSelectorView").style.display = "none";
       document.getElementById("teamSecurityLockView").style.display = "none";
@@ -3653,13 +3665,102 @@
       if (window.lucide) lucide.createIcons();
     }
 
+    let isAttendancePermanentlyLocked = false;
+
+    function lockFormInputs(isLocked) {
+      isAttendancePermanentlyLocked = isLocked;
+
+      // 1. Quick actions row
+      const quickRow = document.querySelector(".quick-actions-row");
+      if (quickRow) quickRow.style.display = isLocked ? "none" : "flex";
+
+      // 2. Member list
+      const memberList = document.getElementById("memberListContainer");
+      if (memberList) {
+        memberList.style.pointerEvents = isLocked ? "none" : "auto";
+        memberList.style.opacity = isLocked ? "0.9" : "1";
+      }
+
+      // 3. Selfie Upload Box
+      const promptArea = document.getElementById("selfiePromptArea");
+      const actionBar = document.getElementById("selfieActionBar");
+      const cameraInput = document.getElementById("selfieCameraInput");
+      const fileInput = document.getElementById("selfieFileInput");
+      const uploadBox = document.getElementById("selfieUploadBox");
+      if (isLocked) {
+        if (promptArea) promptArea.style.display = "none";
+        if (actionBar) actionBar.style.display = "none";
+        if (cameraInput) cameraInput.disabled = true;
+        if (fileInput) fileInput.disabled = true;
+        if (uploadBox) uploadBox.style.pointerEvents = "none";
+      } else {
+        if (cameraInput) cameraInput.disabled = false;
+        if (fileInput) fileInput.disabled = false;
+        if (uploadBox) uploadBox.style.pointerEvents = "auto";
+      }
+
+      // 4. Remarks
+      const remarks = document.getElementById("attendanceRemarks");
+      if (remarks) {
+        remarks.readOnly = isLocked;
+        remarks.disabled = isLocked;
+        if (isLocked) {
+          remarks.style.background = "#f1f5f9";
+          remarks.style.cursor = "not-allowed";
+        } else {
+          remarks.style.background = "";
+          remarks.style.cursor = "";
+        }
+      }
+
+      // 5. Submit Button
+      const submitBtn = document.getElementById("submitAttendanceBtn");
+      if (submitBtn) {
+        if (isLocked) {
+          submitBtn.disabled = true;
+          submitBtn.style.background = "#475569";
+          submitBtn.style.cursor = "not-allowed";
+          submitBtn.style.boxShadow = "none";
+          submitBtn.innerHTML = `
+            <i data-lucide="lock" style="width:20px;height:20px;"></i>
+            <span>Attendance Verified & Permanently Locked (Read-Only)</span>
+          `;
+        } else {
+          submitBtn.disabled = false;
+          submitBtn.style.background = "";
+          submitBtn.style.cursor = "";
+          submitBtn.style.boxShadow = "";
+          submitBtn.innerHTML = `
+            <i data-lucide="check-circle-2" style="width:22px;height:22px;"></i>
+            <span>Submit Team Attendance</span>
+          `;
+        }
+      }
+
+      // 6. Edit Button in Alert Banner
+      const editBtn = document.getElementById("btnEditAttendance");
+      if (editBtn && isLocked) {
+        editBtn.style.display = "none";
+      }
+
+      if (window.lucide) lucide.createIcons();
+    }
+
     function togglePresence(enrollment) {
+      if (isAttendancePermanentlyLocked) {
+        alert("🔒 Attendance is already locked with a verified group photo. No changes can be made.");
+        return;
+      }
       memberPresenceMap[enrollment] = !memberPresenceMap[enrollment];
       renderMemberList();
       updatePresenceCounter();
     }
 
     function setAllPresence(val) {
+      if (isAttendancePermanentlyLocked) {
+        alert("🔒 Attendance is already locked with a verified group photo. No changes can be made.");
+        return;
+      }
       if (!currentTeam) return;
       currentTeam.members.forEach(m => {
         memberPresenceMap[m.enrollment] = val;
@@ -3684,6 +3785,10 @@
     // GROUP SELFIE CAPTURE & UPLOAD (COMPRESSION + GEO-TIMESTAMP WATERMARK)
     // -------------------------------------------------------------------------
     function handleSelfieFileSelect(input) {
+      if (isAttendancePermanentlyLocked) {
+        alert("🔒 Attendance is permanently locked with a verified group photo. Photo uploads are disabled.");
+        return;
+      }
       if (!input.files || !input.files[0]) return;
       const file = input.files[0];
 
@@ -3728,6 +3833,10 @@
     }
 
     function resetSelfie() {
+      if (isAttendancePermanentlyLocked) {
+        alert("🔒 Verified group photo is locked and cannot be changed or retaken.");
+        return;
+      }
       capturedSelfieDataUrl = null;
       document.getElementById("selfiePreviewContainer").style.display = "none";
       document.getElementById("selfiePromptArea").style.display = "block";
@@ -3796,6 +3905,10 @@
     // LIVE WEBCAM SELFIE CAPTURE
     // -------------------------------------------------------------------------
     async function openLiveCamera() {
+      if (isAttendancePermanentlyLocked) {
+        alert("🔒 Attendance is permanently locked with a verified group photo. Live camera capture is disabled.");
+        return;
+      }
       const modal = document.getElementById("cameraModal");
       const video = document.getElementById("cameraVideo");
 
@@ -3868,6 +3981,11 @@
       event.preventDefault();
       if (!currentTeam) {
         alert("Please select your team first.");
+        return;
+      }
+
+      if (isAttendancePermanentlyLocked) {
+        alert("🔒 Attendance is already recorded and permanently locked with a verified group photo. Edits or modifications are strictly prohibited.");
         return;
       }
 
@@ -4040,9 +4158,11 @@
       // 6. Show Success Screen Modal
       showSuccessModal(attendanceRecord);
 
-      submitBtn.disabled = false;
-      submitBtn.innerHTML = `<i data-lucide="check-circle-2" style="width:22px;height:22px;"></i> Submit Team Attendance`;
-      if (window.lucide) lucide.createIcons();
+      // Permanently lock form as attendance is now recorded with verified group selfie
+      isAttendancePermanentlyLocked = true;
+      lockFormInputs(true);
+      const editBtn = document.getElementById("btnEditAttendance");
+      if (editBtn) editBtn.style.display = "none";
     }
 
     // -------------------------------------------------------------------------
@@ -4140,8 +4260,13 @@ ${memberListText}${absentListText}${remarksText}
     }
 
     function enableReEdit() {
+      if (isAttendancePermanentlyLocked) {
+        alert("🔒 Attendance is permanently locked with a verified group photo. Edits or modifications are strictly prohibited.");
+        return;
+      }
       document.getElementById("alreadyMarkedAlert").style.display = "none";
-      alert("You can now update presence or re-take the group selfie, then click 'Submit Team Attendance' to save changes.");
+      lockFormInputs(false);
+      alert("You can now update presence or take/upload your team's group selfie, then click 'Submit Team Attendance' to complete verification.");
     }
 
     // Check if attendance already recorded (Live Server DB -> LocalStorage -> Firestore)
@@ -4150,23 +4275,62 @@ ${memberListText}${absentListText}${remarksText}
       const details = document.getElementById("alreadyMarkedDetails");
       const photoContainer = document.getElementById("alreadyMarkedPhotoContainer");
       const photoImg = document.getElementById("alreadyMarkedPhoto");
+      const editBtn = document.getElementById("btnEditAttendance");
 
       function applyFoundRecord(rec) {
         alertBox.style.display = "block";
-        details.innerHTML = `Submitted on <strong>${rec.submitted_at_formatted || 'Recently'}</strong> • <strong>${rec.present_count}/${rec.total_members} Members Present</strong>.`;
-        if (rec.selfie_image) {
+        const hasPhoto = Boolean(rec.selfie_image && String(rec.selfie_image).trim().length > 50);
+
+        if (hasPhoto) {
+          // STRICT RULE: If group photo is uploaded, permanently lock EVERYTHING!
+          // No edit button, no member toggle, no photo retake, no submit.
+          isAttendancePermanentlyLocked = true;
+          lockFormInputs(true);
+          if (editBtn) {
+            editBtn.style.display = "none";
+          }
+          details.innerHTML = `
+            Submitted on <strong>${rec.submitted_at_formatted || 'Recently'}</strong> • <strong>${rec.present_count}/${rec.total_members} Members Present</strong>.
+            <div style="margin-top:8px; padding:6px 12px; background:rgba(16,185,129,0.15); border:1px solid #10b981; border-radius:8px; display:inline-flex; align-items:center; gap:6px; color:#065f46; font-size:12.5px; font-weight:700;">
+              <i data-lucide="lock" style="width:14px;height:14px;"></i>
+              Verified Group Selfie Attached — Attendance is permanently locked. No edits or changes allowed.
+            </div>
+          `;
           setSelfieImage(rec.selfie_image);
           if (photoContainer && photoImg) {
             photoImg.src = rec.selfie_image;
             photoContainer.style.display = "block";
           }
+        } else {
+          // Photo is NOT uploaded yet: ONLY in this case allow Edit / Upload Photo!
+          isAttendancePermanentlyLocked = false;
+          lockFormInputs(false);
+          if (editBtn) {
+            editBtn.style.display = "inline-flex";
+            editBtn.innerHTML = `<i data-lucide="camera" style="width:13px;height:13px;"></i> 📸 Upload Group Selfie / Complete Verification`;
+          }
+          details.innerHTML = `
+            Submitted on <strong>${rec.submitted_at_formatted || 'Recently'}</strong> • <strong>${rec.present_count}/${rec.total_members} Members Present</strong>.
+            <div style="margin-top:8px; padding:6px 12px; background:rgba(245,158,11,0.15); border:1px solid #f59e0b; border-radius:8px; display:inline-flex; align-items:center; gap:6px; color:#b45309; font-size:12.5px; font-weight:700;">
+              <i data-lucide="alert-triangle" style="width:14px;height:14px;"></i>
+              Group Selfie NOT attached yet! Click the button below to upload photo and complete attendance.
+            </div>
+          `;
+          if (photoContainer) {
+            photoContainer.style.display = "none";
+          }
         }
+
         if (rec.members_presence && Array.isArray(rec.members_presence)) {
           rec.members_presence.forEach(m => {
             memberPresenceMap[m.enrollment] = (m.status === "present");
           });
           renderMemberList();
           updatePresenceCounter();
+        }
+        if (rec.remarks) {
+          const remarksEl = document.getElementById("attendanceRemarks");
+          if (remarksEl) remarksEl.value = rec.remarks;
         }
         if (window.lucide) lucide.createIcons();
       }
@@ -4212,13 +4376,16 @@ ${memberListText}${absentListText}${remarksText}
           if (snap.exists) {
             const data = snap.data();
             applyFoundRecord(data);
-          } else {
-            alertBox.style.display = "none";
+            return;
           }
-        } catch (e) {
-          alertBox.style.display = "none";
-        }
+        } catch (e) {}
       }
+
+      // No record found: Clean state, unlocked
+      alertBox.style.display = "none";
+      isAttendancePermanentlyLocked = false;
+      lockFormInputs(false);
+      if (editBtn) editBtn.style.display = "inline-flex";
     }
 
     // Send background ping to local WhatsApp gateway if reachable
