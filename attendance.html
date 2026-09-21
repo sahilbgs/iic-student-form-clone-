@@ -900,6 +900,23 @@
         </div>
       </div>
 
+      <!-- OFFICIAL SIH 2026 WHATSAPP GROUP JOIN BANNER -->
+      <div style="background: linear-gradient(135deg, #075E54, #128C7E, #25D366); border-radius: 16px; padding: 18px 22px; margin-bottom: 22px; color: #ffffff; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; box-shadow: 0 10px 25px rgba(37, 211, 102, 0.25);">
+        <div style="display:flex; align-items:center; gap:14px;">
+          <div style="width:46px; height:46px; border-radius:50%; background:rgba(255,255,255,0.22); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+            <i data-lucide="message-circle" style="width:26px;height:26px;color:#fff;"></i>
+          </div>
+          <div>
+            <div style="font-weight:900; font-size:16px; letter-spacing:0.2px;">Official SIH 2026 WhatsApp Group</div>
+            <div style="font-size:12.5px; opacity:0.92; margin-top:2px;">All team leaders and members must join for schedules &amp; jury evaluation alerts.</div>
+          </div>
+        </div>
+        <a href="https://chat.whatsapp.com/HeRnef5cQlF6V5eXNA3gjS" target="_blank" style="background:#ffffff; color:#075E54; font-weight:800; font-size:14px; padding:11px 22px; border-radius:999px; text-decoration:none; display:inline-flex; align-items:center; gap:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); transition:transform 0.15s;">
+          <span>Join Official Group</span>
+          <i data-lucide="external-link" style="width:15px;height:15px;"></i>
+        </a>
+      </div>
+
       <!-- ALREADY MARKED ATTENDANCE BANNER (If already submitted) -->
       <div id="alreadyMarkedAlert" style="display:none; background:#ecfdf5; border:1.5px solid #10b981; border-radius:14px; padding:16px 20px; margin-bottom:20px;">
         <div style="display:flex; align-items:center; gap:10px; color:#065f46; font-weight:800; font-size:14px;">
@@ -909,12 +926,21 @@
         <p style="font-size:12.5px; color:#047857; margin-top:4px;" id="alreadyMarkedDetails">
           Submitted on 21 Sep 2026. You can review your submission below or forward it again to the organizer.
         </p>
+
+        <!-- Uploaded Photo Display in Alert Banner -->
+        <div id="alreadyMarkedPhotoContainer" style="margin-top:14px; display:none;">
+          <div style="font-size:12px; font-weight:700; color:#065f46; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
+            <i data-lucide="camera" style="width:15px;height:15px;"></i> Verified Group Selfie:
+          </div>
+          <img id="alreadyMarkedPhoto" src="" alt="Verified Group Selfie" style="width:100%; max-height:280px; object-fit:cover; border-radius:10px; border:2px solid #10b981; box-shadow:0 4px 12px rgba(16,185,129,0.15);">
+        </div>
+
         <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
           <button type="button" class="btn-quick" onclick="forwardExistingAttendance()" style="background:#25D366; color:#fff; border-color:#25D366;">
             <i data-lucide="share-2" style="width:13px;height:13px;"></i> Forward on WhatsApp (+91 9978309254)
           </button>
           <button type="button" class="btn-quick" onclick="enableReEdit()">
-            <i data-lucide="edit-3" style="width:13px;height:13px;"></i> Edit / Re-submit Attendance
+            <i data-lucide="edit-3" style="width:13px;height:13px;"></i> Edit / Re-take Photo
           </button>
         </div>
       </div>
@@ -981,12 +1007,13 @@
               </p>
 
               <div class="selfie-buttons">
-                <button type="button" class="btn-camera" onclick="openLiveCamera()">
+                <label class="btn-camera" style="cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:8px;">
                   <i data-lucide="camera" style="width:16px;height:16px;"></i> Live Camera Snap
-                </button>
-                <label class="btn-gallery">
-                  <i data-lucide="image" style="width:16px;height:16px;"></i> Upload From Device
-                  <input type="file" id="selfieFileInput" accept="image/*" capture="user" style="display:none;" onchange="handleSelfieFileSelect(this)">
+                  <input type="file" id="selfieCameraInput" accept="image/*" capture="environment" style="display:none;" onchange="handleSelfieFileSelect(this)">
+                </label>
+                <label class="btn-gallery" style="cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:8px;">
+                  <i data-lucide="image" style="width:16px;height:16px;"></i> Choose From Gallery
+                  <input type="file" id="selfieFileInput" accept="image/*" style="display:none;" onchange="handleSelfieFileSelect(this)">
                 </label>
               </div>
             </div>
@@ -1086,9 +1113,17 @@
           <span style="color:var(--text-muted);">Presence Status:</span>
           <strong id="modalPresenceStatus" style="color:var(--success);">-</strong>
         </div>
-        <div style="display:flex; justify-content:space-between;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
           <span style="color:var(--text-muted);">Recorded At:</span>
           <span id="modalTimestamp" style="font-family:monospace; font-weight:600;">-</span>
+        </div>
+
+        <!-- Group Photo in Success Modal -->
+        <div id="modalPhotoContainer" style="display:none; margin-top:10px; border-top:1px dashed var(--border-color); padding-top:10px;">
+          <div style="font-size:11.5px; font-weight:700; color:var(--text-muted); margin-bottom:6px; display:flex; align-items:center; gap:5px;">
+            <i data-lucide="camera" style="width:14px;height:14px;color:var(--success);"></i> Uploaded Group Selfie:
+          </div>
+          <img id="modalSelfieImg" src="" alt="Group Selfie" style="width:100%; max-height:220px; object-fit:cover; border-radius:8px; border:1.5px solid #10b981; box-shadow:0 3px 10px rgba(16,185,129,0.12);">
         </div>
       </div>
 
@@ -3374,6 +3409,23 @@
       const teamQuery = params.get("team") || params.get("team_id") || params.get("reg_id") || params.get("id");
       const urlToken = params.get("token") || params.get("auth") || params.get("t") || "";
 
+      // 0. Dynamically fetch latest live registered teams from PostgreSQL API
+      try {
+        const origin = (window.location.hostname === "localhost" || window.location.hostname.includes("aceglory.in")) 
+          ? window.location.origin 
+          : "https://iic-gtu-itr.aceglory.in";
+        const res = await fetch(`${origin}/api/attendance/teams?t=${Date.now()}`, { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.teams) && data.teams.length > 0) {
+            SEEDED_SIH_TEAMS = data.teams;
+            ALL_SIH_TEAMS = data.teams;
+          }
+        }
+      } catch (e) {
+        console.warn("[Attendance] Live teams API fallback:", e);
+      }
+
       // 1. Direct Secret Token Access (?t=... or ?token=...)
       if (urlToken && !teamQuery) {
         const teamByToken = SEEDED_SIH_TEAMS.find(t => t.token && t.token.toLowerCase() === urlToken.toLowerCase());
@@ -3390,6 +3442,23 @@
       // 2. Team Query (e.g. ?team=4)
       if (teamQuery) {
         let matched = findTeamByQuery(teamQuery);
+
+        // Fallback: If not in local list, query server API directly for this specific team
+        if (!matched) {
+          try {
+            const origin = (window.location.hostname === "localhost" || window.location.hostname.includes("aceglory.in")) 
+              ? window.location.origin 
+              : "https://iic-gtu-itr.aceglory.in";
+            const sRes = await fetch(`${origin}/api/attendance/team/${encodeURIComponent(teamQuery)}?t=${Date.now()}`);
+            if (sRes.ok) {
+              const sData = await sRes.json();
+              if (sData.success && sData.team) {
+                matched = sData.team;
+                SEEDED_SIH_TEAMS.push(matched);
+              }
+            }
+          } catch (e) {}
+        }
 
         if (matched) {
           if (isTeamAuthorized(matched, urlToken)) {
@@ -3618,9 +3687,21 @@
       if (!input.files || !input.files[0]) return;
       const file = input.files[0];
 
-      // Compress and load image
+      const promptArea = document.getElementById("selfiePromptArea");
+      const prevHtml = promptArea.innerHTML;
+      promptArea.innerHTML = `
+        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px 0;">
+          <div style="width:36px; height:36px; border:3px solid #e2e8f0; border-top-color:#10b981; border-radius:50%; animation:spin 0.8s linear infinite; margin-bottom:12px;"></div>
+          <strong style="color:var(--text-main); font-size:14px;">Processing Photo...</strong>
+          <span style="color:var(--text-muted); font-size:12px; margin-top:4px;">Please wait a moment</span>
+        </div>
+      `;
+
       compressAndProcessImage(file, (compressedDataUrl) => {
         setSelfieImage(compressedDataUrl);
+      }, () => {
+        promptArea.innerHTML = prevHtml;
+        if (window.lucide) lucide.createIcons();
       });
     }
 
@@ -3654,39 +3735,60 @@
       document.getElementById("selfieUploadBox").classList.remove("has-image");
       const fileInput = document.getElementById("selfieFileInput");
       if (fileInput) fileInput.value = "";
+      const camInput = document.getElementById("selfieCameraInput");
+      if (camInput) camInput.value = "";
     }
 
-    // Client-side Image Compression (max dimension 1280px, WebP/JPEG 0.82)
-    function compressAndProcessImage(file, callback) {
+    // Client-side Image Compression (max dimension 1024px, JPEG 0.78 for fast cloud save)
+    function compressAndProcessImage(file, callback, errorCallback) {
       const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement("canvas");
-          const ctx = canvas.getContext("2d");
-
-          let width = img.width;
-          let height = img.height;
-          const maxDimension = 1280;
-
-          if (width > height && width > maxDimension) {
-            height = Math.round((height * maxDimension) / width);
-            width = maxDimension;
-          } else if (height > maxDimension) {
-            width = Math.round((width * maxDimension) / height);
-            height = maxDimension;
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-          ctx.drawImage(img, 0, 0, width, height);
-
-          // Return compressed JPEG data url
-          const compressed = canvas.toDataURL("image/jpeg", 0.82);
-          callback(compressed);
-        };
-        img.src = e.target.result;
+      reader.onerror = (err) => {
+        console.error("FileReader error:", err);
+        alert("Could not load image file. Please try selecting a different photo.");
+        if (errorCallback) errorCallback();
       };
+
+      reader.onload = (e) => {
+        const rawDataUrl = e.target.result;
+        const img = new Image();
+
+        img.onerror = () => {
+          console.warn("Canvas Image decode fallback to raw data URL");
+          callback(rawDataUrl);
+        };
+
+        img.onload = () => {
+          try {
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
+
+            let width = img.width;
+            let height = img.height;
+            const maxDimension = 1024;
+
+            if (width > height && width > maxDimension) {
+              height = Math.round((height * maxDimension) / width);
+              width = maxDimension;
+            } else if (height > maxDimension) {
+              width = Math.round((width * maxDimension) / height);
+              height = maxDimension;
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            ctx.drawImage(img, 0, 0, width, height);
+
+            const compressed = canvas.toDataURL("image/jpeg", 0.78);
+            callback(compressed);
+          } catch (canvasErr) {
+            console.warn("Canvas compression note, using raw:", canvasErr);
+            callback(rawDataUrl);
+          }
+        };
+
+        img.src = rawDataUrl;
+      };
+
       reader.readAsDataURL(file);
     }
 
@@ -3769,10 +3871,19 @@
         return;
       }
 
-      // Check Group Selfie
-      if (!capturedSelfieDataUrl) {
-        alert("📸 Please capture or upload your team's Group Selfie before submitting attendance.");
-        document.getElementById("selfieUploadBox").scrollIntoView({ behavior: "smooth" });
+      // Check Group Selfie (STRICTLY MANDATORY)
+      if (!capturedSelfieDataUrl || capturedSelfieDataUrl.length < 50) {
+        alert("📸 MANDATORY PHOTO REQUIRED:\nPlease take a live camera snap or upload your team's group selfie before submitting attendance.\n\nગ્રૂપ સેલ્ફી ફોટો અપલોડ કરવો ફરજિયાત છે.");
+        const selfieBox = document.getElementById("selfieUploadBox");
+        if (selfieBox) {
+          selfieBox.scrollIntoView({ behavior: "smooth", block: "center" });
+          selfieBox.style.borderColor = "#ef4444";
+          selfieBox.style.boxShadow = "0 0 0 4px rgba(239, 68, 68, 0.35)";
+          setTimeout(() => {
+            selfieBox.style.borderColor = "";
+            selfieBox.style.boxShadow = "";
+          }, 3500);
+        }
         return;
       }
 
@@ -3823,7 +3934,7 @@
       // 1. Save to PostgreSQL Database (Official Portal Backend)
       try {
         const apiHost = (window.location.hostname === "localhost" || window.location.hostname.includes("aceglory.in")) ? window.location.origin : "https://iic-gtu-itr.aceglory.in";
-        await fetch(`${apiHost}/api/attendance/submit`, {
+        const res = await fetch(`${apiHost}/api/attendance/submit`, {
           method: "POST",
           headers: { 
             "Content-Type": "application/json",
@@ -3848,6 +3959,15 @@
             remarks: remarks
           })
         });
+
+        const resJson = await res.json();
+        if (!resJson.success) {
+          alert("❌ " + (resJson.error || "Attendance submission failed."));
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = `<i data-lucide="check-circle-2" style="width:22px;height:22px;"></i> Submit Team Attendance`;
+          if (window.lucide) lucide.createIcons();
+          return;
+        }
         console.log("[PostgreSQL Database] Attendance recorded successfully in iic_cell_gtu database!");
       } catch (pgErr) {
         console.warn("[PostgreSQL Database save note]:", pgErr);
@@ -3971,6 +4091,14 @@ ${memberListText}${absentListText}${remarksText}
       document.getElementById("modalPresenceStatus").textContent = `${record.present_count} / ${record.total_members} Present`;
       document.getElementById("modalTimestamp").textContent = record.submitted_at_formatted;
 
+      // Display group selfie in success modal if present
+      const modalPhotoContainer = document.getElementById("modalPhotoContainer");
+      const modalSelfieImg = document.getElementById("modalSelfieImg");
+      if (record.selfie_image && modalPhotoContainer && modalSelfieImg) {
+        modalSelfieImg.src = record.selfie_image;
+        modalPhotoContainer.style.display = "block";
+      }
+
       // WhatsApp Forward Link to Admin Number (+91 9978309254)
       const waMsg = generateWhatsAppMessage(record);
       const waUrl = `https://wa.me/${adminWhatsAppNumber}?text=${encodeURIComponent(waMsg)}`;
@@ -4016,28 +4144,63 @@ ${memberListText}${absentListText}${remarksText}
       alert("You can now update presence or re-take the group selfie, then click 'Submit Team Attendance' to save changes.");
     }
 
-    // Check if attendance already recorded
+    // Check if attendance already recorded (Live Server DB -> LocalStorage -> Firestore)
     async function checkExistingAttendance(regId) {
       const alertBox = document.getElementById("alreadyMarkedAlert");
       const details = document.getElementById("alreadyMarkedDetails");
+      const photoContainer = document.getElementById("alreadyMarkedPhotoContainer");
+      const photoImg = document.getElementById("alreadyMarkedPhoto");
+
+      function applyFoundRecord(rec) {
+        alertBox.style.display = "block";
+        details.innerHTML = `Submitted on <strong>${rec.submitted_at_formatted || 'Recently'}</strong> • <strong>${rec.present_count}/${rec.total_members} Members Present</strong>.`;
+        if (rec.selfie_image) {
+          setSelfieImage(rec.selfie_image);
+          if (photoContainer && photoImg) {
+            photoImg.src = rec.selfie_image;
+            photoContainer.style.display = "block";
+          }
+        }
+        if (rec.members_presence && Array.isArray(rec.members_presence)) {
+          rec.members_presence.forEach(m => {
+            memberPresenceMap[m.enrollment] = (m.status === "present");
+          });
+          renderMemberList();
+          updatePresenceCounter();
+        }
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // 0. Primary Server PostgreSQL API (/api/attendance/records)
+      try {
+        const origin = (window.location.hostname === "localhost" || window.location.hostname.includes("aceglory.in")) 
+          ? window.location.origin 
+          : "https://iic-gtu-itr.aceglory.in";
+        const res = await fetch(`${origin}/api/attendance/records?t=${Date.now()}`, { cache: 'no-store' });
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && Array.isArray(json.records)) {
+            const match = json.records.find(r => 
+              (currentTeam && (r.registration_id == currentTeam.id || (r.team_name && r.team_name.toLowerCase().trim() === currentTeam.team_name.toLowerCase().trim()))) ||
+              r.reg_id === regId ||
+              (r.registration_id && `REG-${String(r.registration_id).padStart(4, '0')}` === regId)
+            );
+            if (match) {
+              applyFoundRecord(match);
+              return;
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("Server attendance check note:", e);
+      }
 
       // 1. Check LocalStorage
       const local = localStorage.getItem(`gtu_att_${regId}`);
       if (local) {
         try {
           const rec = JSON.parse(local);
-          alertBox.style.display = "block";
-          details.innerHTML = `Submitted on <strong>${rec.submitted_at_formatted}</strong> • <strong>${rec.present_count}/${rec.total_members} Members Present</strong>.`;
-          if (rec.selfie_image) {
-            setSelfieImage(rec.selfie_image);
-          }
-          if (rec.members_presence) {
-            rec.members_presence.forEach(m => {
-              memberPresenceMap[m.enrollment] = (m.status === "present");
-            });
-            renderMemberList();
-            updatePresenceCounter();
-          }
+          applyFoundRecord(rec);
           return;
         } catch (e) {}
       }
@@ -4048,18 +4211,7 @@ ${memberListText}${absentListText}${remarksText}
           const snap = await window.db.collection("sih_attendance").doc(`ATT-${regId}`).get();
           if (snap.exists) {
             const data = snap.data();
-            alertBox.style.display = "block";
-            details.innerHTML = `Submitted on <strong>${data.submitted_at_formatted || "Recently"}</strong> • <strong>${data.present_count}/${data.total_members} Members Present</strong>.`;
-            if (data.selfie_image) {
-              setSelfieImage(data.selfie_image);
-            }
-            if (data.members_presence) {
-              data.members_presence.forEach(m => {
-                memberPresenceMap[m.enrollment] = (m.status === "present");
-              });
-              renderMemberList();
-              updatePresenceCounter();
-            }
+            applyFoundRecord(data);
           } else {
             alertBox.style.display = "none";
           }

@@ -288,17 +288,20 @@
 
     /* Selfie Thumbnail */
     .selfie-thumb {
-      width: 48px;
-      height: 48px;
-      border-radius: 8px;
+      width: 58px;
+      height: 58px;
+      border-radius: 10px;
       object-fit: cover;
       cursor: pointer;
-      border: 1.5px solid var(--border-color);
-      transition: all 0.15s ease;
+      border: 2px solid #10b981;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      transition: all 0.2s ease;
+      display: block;
     }
     .selfie-thumb:hover {
-      transform: scale(1.08);
-      border-color: var(--primary);
+      transform: scale(1.15);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+      border-color: #059669;
     }
 
     /* Modal / Lightbox */
@@ -2739,6 +2742,22 @@
 
     async function initDashboard() {
       if (window.lucide) lucide.createIcons();
+      // 0. Fetch live teams from PostgreSQL database
+      try {
+        const origin = (window.location.hostname === "localhost" || window.location.hostname.includes("aceglory.in")) 
+          ? window.location.origin 
+          : "https://iic-gtu-itr.aceglory.in";
+        const res = await fetch(`${origin}/api/attendance/teams?t=${Date.now()}`, { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.teams) && data.teams.length > 0) {
+            SIH_TEAMS_DATA = data.teams;
+          }
+        }
+      } catch (e) {
+        console.warn("Live teams fetch note:", e);
+      }
+
       await fetchAttendanceRecords();
       renderTable(SIH_TEAMS_DATA);
       updateKPIs();
@@ -2746,6 +2765,30 @@
 
     async function fetchAttendanceRecords() {
       attendanceRecordsMap = {};
+
+      // 0. Live PostgreSQL Server (/api/attendance/records)
+      try {
+        const origin = (window.location.hostname === "localhost" || window.location.hostname.includes("aceglory.in")) 
+          ? window.location.origin 
+          : "https://iic-gtu-itr.aceglory.in";
+        const res = await fetch(`${origin}/api/attendance/records?t=${Date.now()}`, { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.records)) {
+            data.records.forEach(rec => {
+              const regId = rec.reg_id || (rec.registration_id ? `REG-${String(rec.registration_id).padStart(4, '0')}` : null);
+              if (regId) attendanceRecordsMap[regId] = rec;
+              if (rec.registration_id) attendanceRecordsMap[String(rec.registration_id)] = rec;
+              if (rec.team_name) {
+                attendanceRecordsMap[rec.team_name.toLowerCase().trim()] = rec;
+                attendanceRecordsMap[rec.team_name.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()] = rec;
+              }
+            });
+          }
+        }
+      } catch (e) {
+        console.warn("PostgreSQL attendance fetch note:", e);
+      }
 
       // 1. LocalStorage
       try {
@@ -2809,12 +2852,24 @@
       return `${origin}${dir}/attendance.html?v=2&team=${encodeURIComponent(teamId)}${token ? '&token=' + encodeURIComponent(token) : ''}`;
     }
 
+    function getTeamAttendanceRecord(team) {
+      if (!team) return null;
+      const cleanName = (team.team_name || "").replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+      const normName = (team.team_name || "").toLowerCase().trim();
+      return attendanceRecordsMap[team.reg_id] || 
+             attendanceRecordsMap[String(team.id)] || 
+             attendanceRecordsMap[`REG-${String(team.id).padStart(4, '0')}`] || 
+             attendanceRecordsMap[normName] || 
+             attendanceRecordsMap[cleanName] || 
+             null;
+    }
+
     function renderTable(teams) {
       const tbody = document.getElementById("teamsTbody");
       if (!tbody) return;
 
       tbody.innerHTML = teams.map((team, idx) => {
-        const att = attendanceRecordsMap[team.reg_id];
+        const att = getTeamAttendanceRecord(team);
         const isMarked = Boolean(att);
         const teamLink = getTeamAttendanceLink(team);
 
@@ -2828,9 +2883,16 @@
           `;
         }
 
-        let selfieHtml = `<span style="color:var(--text-muted); font-size:12px;">No photo</span>`;
+        let selfieHtml = `<span style="color:var(--text-muted); font-size:11.5px; display:inline-flex; align-items:center; gap:3px;"><i data-lucide="camera-off" style="width:13px;height:13px;"></i> No photo</span>`;
         if (isMarked && att.selfie_image) {
-          selfieHtml = `<img src="${att.selfie_image}" class="selfie-thumb" onclick="openSelfieModal('${team.reg_id}')" title="Click to view selfie">`;
+          selfieHtml = `
+            <div style="position:relative; display:inline-block; cursor:pointer;" onclick="openSelfieModal('${team.reg_id}')" title="Click to view full photo">
+              <img src="${att.selfie_image}" class="selfie-thumb" alt="Group Selfie">
+              <span style="position:absolute; bottom:2px; right:2px; background:rgba(0,0,0,0.7); color:#fff; border-radius:4px; font-size:9px; font-weight:700; padding:1px 4px; line-height:1; pointer-events:none;">
+                🔍 View
+              </span>
+            </div>
+          `;
         }
 
         return `
@@ -2894,11 +2956,11 @@
       let totalStudents = 0;
 
       SIH_TEAMS_DATA.forEach(t => {
-        totalStudents += t.members.length;
-        const att = attendanceRecordsMap[t.reg_id];
+        totalStudents += (t.members ? t.members.length : (t.total_members || 0));
+        const att = getTeamAttendanceRecord(t);
         if (att) {
           completed++;
-          studentsPresent += (att.present_count || 0);
+          studentsPresent += (parseInt(att.present_count, 10) || 0);
         }
       });
 
@@ -2917,7 +2979,7 @@
     }
 
     // -------------------------------------------------------------------------
-    // WHATSAPP LINK GENERATORS
+    // WHATSAPP LINK GENERATORS & HELPERS
     // -------------------------------------------------------------------------
     function cleanPhone(phone) {
       let p = String(phone || "").replace(/[^\d]/g, "");
@@ -2927,122 +2989,156 @@
 
     function getWhatsAppInviteUrl(team, link) {
       const phone = cleanPhone(team.leader_phone);
-      const msg = 
-`Hello *${team.leader_name}* (Team: *${team.team_name}*),
-Greetings from GTU-ITR IIC Cell!
-
-Please mark your team's Smart India Hackathon (SIH 2026) attendance and upload your group selfie using your team's dedicated link:
-🔗 ${link}
-
-_Please submit your attendance promptly at the venue._`;
-
-      return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+      const text = encodeURIComponent(
+        `👋 Namaste ${team.leader_name}!\n\n` +
+        `Here is the official venue attendance link for your SIH 2026 team *"${team.team_name}"*:\n` +
+        `🔗 ${link}\n\n` +
+        `Please open this link inside the Hackathon Lab and verify your team's presence with a live selfie.\n\n` +
+        `— GTU-ITR IIC & R&D Cell`
+      );
+      return `https://wa.me/${phone}?text=${text}`;
     }
 
     function getWhatsAppReminderUrl(team, link) {
       const phone = cleanPhone(team.leader_phone);
-      const msg = 
-`⚠️ *REMINDER — SIH 2026 Hackathon Attendance*
-Team: *${team.team_name}* | Leader: *${team.leader_name}*
-
-Your team attendance is still *PENDING*. Please open your link, mark present members, and upload your live group selfie right now:
-🔗 ${link}
-
-— GTU-ITR IIC & R&D Cell`;
-
-      return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+      const text = encodeURIComponent(
+        `⚠️ *REMINDER — SIH 2026 ATTENDANCE PENDING*\n\n` +
+        `Dear ${team.leader_name},\n` +
+        `Attendance for your team *"${team.team_name}"* (PSID: ${team.psid}) has not been marked yet.\n\n` +
+        `Kindly open your team attendance link right now:\n` +
+        `👉 ${link}\n\n` +
+        `Thank you!\n— GTU-ITR Coordinators`
+      );
+      return `https://wa.me/${phone}?text=${text}`;
     }
 
-    // -------------------------------------------------------------------------
-    // FORWARDING & MODALS
-    // -------------------------------------------------------------------------
-    function forwardTeamAttendanceToAdmin(regId) {
-      const team = SIH_TEAMS_DATA.find(t => t.reg_id === regId);
-      const att = attendanceRecordsMap[regId];
-      if (!team || !att) return;
+    function copyLink(text) {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => showToast("Link copied to clipboard! 📋"));
+      } else {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+        showToast("Link copied to clipboard! 📋");
+      }
+    }
 
-      let memberText = "";
-      if (att.members_presence) {
-        att.members_presence.forEach((m, i) => {
-          const statusSym = m.status === "present" ? "PRESENT ✅" : "ABSENT ❌";
-          memberText += `👤 ${i+1}. *${m.name}* (${m.enrollment}) — ${statusSym}\n`;
-        });
+    function copyAllPendingLinks() {
+      const pendingTeams = SIH_TEAMS_DATA.filter(t => !getTeamAttendanceRecord(t));
+      if (pendingTeams.length === 0) {
+        showToast("All teams have already submitted attendance! 🎉");
+        return;
+      }
+      const lines = pendingTeams.map((t, idx) => `${idx + 1}. ${t.team_name} (${t.leader_name} - ${t.leader_phone}):\n   ${getTeamAttendanceLink(t)}`);
+      copyLink(lines.join("\n\n"));
+      showToast(`Copied links for ${pendingTeams.length} pending teams!`);
+    }
+
+    function exportToCSV() {
+      const headers = ["#", "Team Name", "Reg ID", "PSID", "Theme", "Leader Name", "Leader Phone", "Attendance Status", "Present Count", "Total Members", "Submission Time", "Remarks", "Attendance Link"];
+      const rows = SIH_TEAMS_DATA.map((t, idx) => {
+        const att = getTeamAttendanceRecord(t);
+        return [
+          idx + 1,
+          `"${t.team_name.replace(/"/g, '""')}"`,
+          t.reg_id,
+          t.psid,
+          `"${(t.theme || "").replace(/"/g, '""')}"`,
+          `"${t.leader_name.replace(/"/g, '""')}"`,
+          t.leader_phone || "",
+          att ? "PRESENT" : "PENDING",
+          att ? att.present_count : 0,
+          t.members.length,
+          att ? (att.submitted_at_formatted || "Submitted") : "",
+          att ? `"${(att.remarks || "").replace(/"/g, '""')}"` : "",
+          getTeamAttendanceLink(t)
+        ].join(",");
+      });
+
+      const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows].join("\n");
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `SIH_2026_Attendance_Report_${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast("Attendance CSV downloaded successfully! 📊");
+    }
+
+    function forwardAllAttendanceToAdmin() {
+      const markedTeams = SIH_TEAMS_DATA.filter(t => getTeamAttendanceRecord(t));
+      if (markedTeams.length === 0) {
+        alert("No teams have submitted attendance yet.");
+        return;
       }
 
-      const msg = 
-`📋 *SIH 2026 Internal Hackathon - Team Attendance*
-━━━━━━━━━━━━━━━━━━━━━━━
-👥 *Team:* ${team.team_name}
-🆔 *Reg ID:* ${team.reg_id}
-💡 *PSID:* ${team.psid} (${team.theme || "Software"})
-👑 *Leader:* ${team.leader_name} (${team.leader_phone || "-"})
+      let summary = `📋 *SIH 2026 — LIVE ATTENDANCE CONSOLE SUMMARY*\n` +
+                    `━━━━━━━━━━━━━━━━━━━━━━━\n` +
+                    `⏰ *Time:* ${new Date().toLocaleTimeString()} | ${new Date().toLocaleDateString()}\n` +
+                    `📊 *Marked:* ${markedTeams.length} / ${SIH_TEAMS_DATA.length} Teams\n` +
+                    `━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
 
-📊 *Attendance:* ${att.present_count} / ${att.total_members} Present
-━━━━━━━━━━━━━━━━━━━━━━━
-${memberText}
-⏰ *Time:* ${att.submitted_at_formatted || "Today"}
-📸 *Group Selfie:* Verified in Cloud Portal
-📍 *GTU-ITR IIC & R&D Cell*`;
+      markedTeams.forEach((t, i) => {
+        const att = getTeamAttendanceRecord(t);
+        summary += `*${i + 1}. ${t.team_name}*\n` +
+                   `   Leader: ${t.leader_name} (${t.leader_phone})\n` +
+                   `   Presence: ${att.present_count}/${t.members.length} Present ✅\n` +
+                   `   Time: ${att.submitted_at_formatted || 'Recently'}\n\n`;
+      });
 
-      window.open(`https://wa.me/${ADMIN_WA_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
+      const adminWaUrl = `https://wa.me/918849896384?text=${encodeURIComponent(summary)}`;
+      window.open(adminWaUrl, "_blank");
     }
 
-    function forwardMasterSummaryToWhatsApp() {
-      let presentCount = 0;
-      let pendingCount = 0;
-      let totalStudents = 0;
-      let presentStudents = 0;
-      let teamSummaryText = "";
+    function forwardTeamAttendanceToAdmin(regId) {
+      const team = SIH_TEAMS_DATA.find(t => t.reg_id === regId || String(t.id) === String(regId));
+      const att = getTeamAttendanceRecord(team) || attendanceRecordsMap[regId];
+      if (!att || !team) {
+        alert("Attendance data not found for this team.");
+        return;
+      }
 
-      SIH_TEAMS_DATA.forEach((t, i) => {
-        totalStudents += t.members.length;
-        const att = attendanceRecordsMap[t.reg_id];
-        if (att) {
-          presentCount++;
-          presentStudents += (att.present_count || 0);
-          teamSummaryText += `✅ ${i+1}. *${t.team_name}* — ${att.present_count}/${att.total_members} Present (${att.submitted_at_formatted || "Done"})\n`;
-        } else {
-          pendingCount++;
-          teamSummaryText += `⏳ ${i+1}. *${t.team_name}* (Leader: ${t.leader_name}) — PENDING\n`;
-        }
-      });
+      let membersList = "";
+      if (att.members_presence && Array.isArray(att.members_presence)) {
+        membersList = att.members_presence.map((m, idx) => 
+          `👤 ${idx + 1}. *${m.name}* (${m.enrollment}) — ${m.status==='present' ? 'PRESENT ✅' : 'ABSENT ❌'}`
+        ).join("\n");
+      }
 
-      const msg = 
-`📊 *GTU-ITR SIH 2026 — MASTER ATTENDANCE REPORT*
-━━━━━━━━━━━━━━━━━━━━━━━
-🏛️ *Gujarat Technological University (GTU-ITR)*
-🏢 *IIC & R&D Cell — Internal Hackathon 2026*
-⏰ *Generated:* ${new Date().toLocaleString("en-IN")}
+      const text = 
+        `📋 *SIH 2026 — TEAM ATTENDANCE REPORT*\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━━\n` +
+        `👥 *Team:* ${team.team_name}\n` +
+        `🆔 *Reg ID:* ${team.reg_id} | PSID: ${team.psid}\n` +
+        `👑 *Leader:* ${team.leader_name} (${team.leader_phone})\n` +
+        `📊 *Attendance:* ${att.present_count} / ${att.total_members || team.members.length} Present\n` +
+        `⏰ *Recorded:* ${att.submitted_at_formatted || "Recently"}\n` +
+        (att.remarks ? `📝 *Remarks:* ${att.remarks}\n` : '') +
+        `━━━━━━━━━━━━━━━━━━━━━━━\n` +
+        (membersList ? `${membersList}\n` : '') +
+        (att.selfie_image ? `📸 *Group Selfie:* Uploaded to server\n` : '') +
+        `\n— GTU-ITR Hackathon Control Console`;
 
-📈 *OVERVIEW:*
-• Total Registered Teams: *${SIH_TEAMS_DATA.length}*
-• Attendance Completed: *${presentCount} Teams* ✅
-• Attendance Pending: *${pendingCount} Teams* ⏳
-• Total Students Present: *${presentStudents} / ${totalStudents}* 👥
-━━━━━━━━━━━━━━━━━━━━━━━
-📋 *TEAM-WISE ATTENDANCE STATUS:*
-${teamSummaryText}
-━━━━━━━━━━━━━━━━━━━━━━━
-_Report synchronized live from Google Cloud Firestore Standby._`;
-
-      window.open(`https://wa.me/${ADMIN_WA_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
+      window.open(`https://wa.me/918849896384?text=${encodeURIComponent(text)}`, "_blank");
     }
 
-    function copyAllTeamLinks() {
-      let text = "📋 *GTU-ITR SIH 2026 — TEAM ATTENDANCE LINKS*\n━━━━━━━━━━━━━━━━━━━━━━━\n\n";
-      SIH_TEAMS_DATA.forEach((t, i) => {
-        text += `${i+1}. *${t.team_name}* (Leader: ${t.leader_name} - ${t.leader_phone})\n👉 ${getTeamAttendanceLink(t.reg_id)}\n\n`;
+    function filterStatus(status) {
+      currentFilter = status;
+      document.querySelectorAll(".tab-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.getAttribute("data-tab") === status);
       });
 
-      navigator.clipboard.writeText(text).then(() => {
-        showToast("All 9 Team Attendance Links copied to clipboard!");
-      });
-    }
-
-    function copyLink(link) {
-      navigator.clipboard.writeText(link).then(() => {
-        showToast("Team attendance link copied!");
-      });
+      let filtered = SIH_TEAMS_DATA;
+      if (status === "present") {
+        filtered = SIH_TEAMS_DATA.filter(t => Boolean(getTeamAttendanceRecord(t)));
+      } else if (status === "pending") {
+        filtered = SIH_TEAMS_DATA.filter(t => !getTeamAttendanceRecord(t));
+      }
+      renderTable(filtered);
     }
 
     function showToast(msg) {
@@ -3054,9 +3150,12 @@ _Report synchronized live from Google Cloud Firestore Standby._`;
 
     // Modal Handlers
     function openSelfieModal(regId) {
-      const att = attendanceRecordsMap[regId];
-      const team = SIH_TEAMS_DATA.find(t => t.reg_id === regId);
-      if (!att || !att.selfie_image) return;
+      const team = SIH_TEAMS_DATA.find(t => t.reg_id === regId || String(t.id) === String(regId));
+      const att = getTeamAttendanceRecord(team) || attendanceRecordsMap[regId];
+      if (!att || !att.selfie_image) {
+        alert("No group selfie image available for this team.");
+        return;
+      }
 
       document.getElementById("selfieModalTitle").textContent = `${team ? team.team_name : regId} — Group Selfie`;
       document.getElementById("selfieModalImg").src = att.selfie_image;
@@ -3070,8 +3169,8 @@ _Report synchronized live from Google Cloud Firestore Standby._`;
     }
 
     function openDetailsModal(regId) {
-      const team = SIH_TEAMS_DATA.find(t => t.reg_id === regId);
-      const att = attendanceRecordsMap[regId];
+      const team = SIH_TEAMS_DATA.find(t => t.reg_id === regId || String(t.id) === String(regId));
+      const att = getTeamAttendanceRecord(team) || attendanceRecordsMap[regId];
       if (!team) return;
 
       document.getElementById("detailsModalTeam").textContent = team.team_name;
@@ -3101,14 +3200,32 @@ _Report synchronized live from Google Cloud Firestore Standby._`;
           `).join("");
         }
 
+        let photoSection = "";
+        if (att.selfie_image) {
+          photoSection = `
+            <div style="margin-top:12px; background:#ffffff; border:1.5px solid #10b981; border-radius:10px; padding:10px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <strong style="font-size:12px; color:#065f46; display:flex; align-items:center; gap:5px;">
+                  <i data-lucide="camera" style="width:14px;height:14px;color:#10b981;"></i> Uploaded Group Selfie:
+                </strong>
+                <a href="${att.selfie_image}" target="_blank" download="Team_${escapeHtml(team.team_name)}_Photo.jpg" class="btn btn--outline btn--sm" style="font-size:11px; padding:2px 8px;">
+                  Download Photo
+                </a>
+              </div>
+              <img src="${att.selfie_image}" style="width:100%; max-height:260px; object-fit:cover; border-radius:8px; cursor:pointer;" onclick="openSelfieModal('${team.reg_id}')" title="Click to view full photo">
+            </div>
+          `;
+        }
+
         statusCard = `
           <div style="background:#ecfdf5; border:1px solid #a7f3d0; border-radius:10px; padding:12px; font-size:13px; color:#065f46;">
             <strong>✅ Attendance Recorded on:</strong> ${att.submitted_at_formatted || "Recently"}
             <br><strong>Status:</strong> ${att.present_count} of ${att.total_members} Members Present
             ${att.remarks ? `<br><strong>Remarks:</strong> ${escapeHtml(att.remarks)}` : ''}
+            ${photoSection}
           </div>
-          <div style="font-weight:700; font-size:13px; margin-top:8px;">Member Attendance Breakdown:</div>
-          <div style="display:flex; flex-direction:column; gap:6px;">
+          <div style="font-weight:700; font-size:13px; margin-top:10px;">Member Attendance Breakdown:</div>
+          <div style="display:flex; flex-direction:column; gap:6px; margin-top:6px;">
             ${membersHtml}
           </div>
         `;
@@ -3118,7 +3235,6 @@ _Report synchronized live from Google Cloud Firestore Standby._`;
 
       const waBtn = document.getElementById("detailsForwardWaBtn");
       waBtn.onclick = () => forwardTeamAttendanceToAdmin(regId);
-
       document.getElementById("detailsModal").classList.add("open");
       if (window.lucide) lucide.createIcons();
     }
@@ -3164,6 +3280,15 @@ _Report synchronized live from Google Cloud Firestore Standby._`;
       if (!str) return "";
       return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
     }
+
+    // Auto-refresh every 10 seconds: automatically pulls latest registered teams & attendance
+    setInterval(async () => {
+      try {
+        await initDashboard();
+      } catch (e) {
+        console.warn("Auto-sync interval note:", e);
+      }
+    }, 10000);
   </script>
 </body>
 </html>

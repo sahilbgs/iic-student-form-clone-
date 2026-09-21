@@ -1,8 +1,10 @@
 [
   {
     "id": 1,
+    "team_no": 1,
     "reg_id": "REG-0001",
     "team_name": "MJD",
+    "token": "fec5c04a21",
     "leader_name": "MAHI P KARNAKE",
     "leader_enrollment": "254600307010",
     "leader_phone": "8347021911",
@@ -40,14 +42,14 @@
         "phone": "+18347021911",
         "email": "smith092005@gmail.com"
       }
-    ],
-    "token": "fec5c04a21",
-    "team_no": 1
+    ]
   },
   {
     "id": 2,
+    "team_no": 2,
     "reg_id": "REG-0002",
     "team_name": "FindVick",
+    "token": "a1ef202a02",
     "leader_name": "Bhojak Shaury",
     "leader_enrollment": "244600307001",
     "leader_phone": "8320358636",
@@ -112,14 +114,14 @@
         "phone": "9106834847",
         "email": "Patelhil627@gmail.com"
       }
-    ],
-    "token": "a1ef202a02",
-    "team_no": 2
+    ]
   },
   {
     "id": 3,
+    "team_no": 3,
     "reg_id": "REG-0003",
     "team_name": "Team - NEURO SAHAY",
+    "token": "7ee13b911d",
     "leader_name": "Prajapati Rutvi Narendrakumar",
     "leader_enrollment": "251041305019",
     "leader_phone": "8866599383",
@@ -184,14 +186,14 @@
         "phone": "9265569503",
         "email": "thakorbaldevji630@gmail.com"
       }
-    ],
-    "token": "7ee13b911d",
-    "team_no": 3
+    ]
   },
   {
     "id": 4,
+    "team_no": 4,
     "reg_id": "REG-0004",
     "team_name": "Thermal Bytes",
+    "token": "19436b64e4",
     "leader_name": "Rudra Milinkumar Patel",
     "leader_enrollment": "26E020",
     "leader_phone": "7016220568",
@@ -256,14 +258,14 @@
         "phone": "9316481184",
         "email": "janvibhagwani245@gmail.com"
       }
-    ],
-    "token": "19436b64e4",
-    "team_no": 4
+    ]
   },
   {
     "id": 5,
+    "team_no": 5,
     "reg_id": "REG-0005",
     "team_name": "InfraDeveloper",
+    "token": "1d80c56db6",
     "leader_name": "Dwij Chetankumar Bhatt",
     "leader_enrollment": "15",
     "leader_phone": "+918485925990",
@@ -328,14 +330,14 @@
         "phone": "+919426218522",
         "email": "diyagurjar585@gmail.com"
       }
-    ],
-    "token": "1d80c56db6",
-    "team_no": 5
+    ]
   },
   {
     "id": 6,
+    "team_no": 6,
     "reg_id": "REG-0006",
     "team_name": "Traffic Trackers",
+    "token": "100b40ad07",
     "leader_name": "Chaudhari Khushi Jagdishbhai",
     "leader_enrollment": "251040107011",
     "leader_phone": "76005 95902",
@@ -400,14 +402,14 @@
         "phone": "9913666801",
         "email": "viyapatel2810@gmail.com"
       }
-    ],
-    "token": "100b40ad07",
-    "team_no": 6
+    ]
   },
   {
     "id": 7,
+    "team_no": 7,
     "reg_id": "REG-0007",
     "team_name": "LegalMetrix",
+    "token": "7d4fd5371b",
     "leader_name": "Shreya Thakkar",
     "leader_enrollment": "241041305037",
     "leader_phone": "9173861468",
@@ -472,14 +474,14 @@
         "phone": "9875220293",
         "email": "hetkansara232007@gmail.com"
       }
-    ],
-    "token": "7d4fd5371b",
-    "team_no": 7
+    ]
   },
   {
     "id": 8,
+    "team_no": 8,
     "reg_id": "REG-0008",
     "team_name": "Team Mighty",
+    "token": "951f0612ce",
     "leader_name": "Krish Patel",
     "leader_enrollment": "231040107043",
     "leader_phone": "8460035928",
@@ -544,14 +546,14 @@
         "phone": "9664943379",
         "email": "241043107006@gtu.edu.in"
       }
-    ],
-    "token": "951f0612ce",
-    "team_no": 8
+    ]
   },
   {
     "id": 9,
+    "team_no": 9,
     "reg_id": "REG-0009",
     "team_name": "Memory Bond",
+    "token": "d9f2f7231c",
     "leader_name": "Atik Saiyad",
     "leader_enrollment": "2628",
     "leader_phone": "8734907574",
@@ -616,14 +618,14 @@
         "phone": "9727704702",
         "email": "rajpurohitaryan511@gmail.com"
       }
-    ],
-    "token": "d9f2f7231c",
-    "team_no": 9
+    ]
   },
   {
     "id": 15,
+    "team_no": 10,
     "reg_id": "REG-0015",
     "team_name": "Mediminds",
+    "token": "2543c6c6f5",
     "leader_name": "Patel Bhoomi",
     "leader_enrollment": "251040107037",
     "leader_phone": "9978732051",
@@ -688,14 +690,14 @@
         "phone": "70522 68296",
         "email": "krishy0308@gmail.com"
       }
-    ],
-    "token": "2543c6c6f5",
-    "team_no": 10
+    ]
   },
   {
     "id": 21,
+    "team_no": 11,
     "reg_id": "REG-0021",
-    "team_name": "TourNove",
+    "team_name": "TravelNova",
+    "token": "bd6745c675",
     "leader_name": "Bhimani Yashvi Arvindbhai",
     "leader_enrollment": "251040107068",
     "leader_phone": "9726044053",
@@ -760,14 +762,14 @@
         "phone": "0",
         "email": "NA@gmail.com"
       }
-    ],
-    "token": "bd6745c675",
-    "team_no": 11
+    ]
   },
   {
     "id": 22,
+    "team_no": 12,
     "reg_id": "REG-0022",
     "team_name": "EcoTech Titan",
+    "token": "9a2a325a57",
     "leader_name": "Patel Meet Rakeshkumar",
     "leader_enrollment": "241040107047",
     "leader_phone": "+91 9409826441",
@@ -832,14 +834,14 @@
         "phone": ".",
         "email": "Na@qrp"
       }
-    ],
-    "token": "9a2a325a57",
-    "team_no": 12
+    ]
   },
   {
     "id": 23,
+    "team_no": 13,
     "reg_id": "REG-0023",
     "team_name": "VisionPro",
+    "token": "5d7e6c6f24",
     "leader_name": "Abdou Kadri Jallow",
     "leader_enrollment": "231040109001",
     "leader_phone": "7043032376",
@@ -904,14 +906,14 @@
         "phone": "7567068793",
         "email": "metuquemarinahelio@gmail.com"
       }
-    ],
-    "token": "5d7e6c6f24",
-    "team_no": 13
+    ]
   },
   {
     "id": 24,
+    "team_no": 14,
     "reg_id": "REG-0024",
     "team_name": "Team SunFlare++",
+    "token": "dcf574339f",
     "leader_name": "Shah Vishwa Mahesh",
     "leader_enrollment": "251040107061",
     "leader_phone": "+91 70963 34473",
@@ -967,14 +969,14 @@
         "phone": "+91 95105 37232",
         "email": "pdiya7527@gmail.com"
       }
-    ],
-    "token": "dcf574339f",
-    "team_no": 14
+    ]
   },
   {
     "id": 25,
+    "team_no": 15,
     "reg_id": "REG-0025",
     "team_name": "Dhwani Setu",
+    "token": "b93a1fb77e",
     "leader_name": "Mihir Rohitkumar Bhavsar",
     "leader_enrollment": "231040107005",
     "leader_phone": "8487078145",
@@ -1039,14 +1041,14 @@
         "phone": "8487812288",
         "email": "rutulprajapati2006@gmail.com"
       }
-    ],
-    "token": "b93a1fb77e",
-    "team_no": 15
+    ]
   },
   {
     "id": 26,
+    "team_no": 16,
     "reg_id": "REG-0026",
     "team_name": "CyberApex",
+    "token": "31006ae207",
     "leader_name": "Het NileshKumar Joshi",
     "leader_enrollment": "254600307009",
     "leader_phone": "9722828423",
@@ -1111,14 +1113,14 @@
         "phone": "9428210172",
         "email": "zalahitarthsinh@gmail.com"
       }
-    ],
-    "token": "31006ae207",
-    "team_no": 16
+    ]
   },
   {
     "id": 27,
+    "team_no": 17,
     "reg_id": "REG-0027",
     "team_name": "SyncSite",
+    "token": "44de5d0bcf",
     "leader_name": "Darshit Barot",
     "leader_enrollment": "241040107002",
     "leader_phone": "9998688016",
@@ -1183,14 +1185,14 @@
         "phone": "9773164576",
         "email": "jasleenhut3@gmail.com"
       }
-    ],
-    "token": "44de5d0bcf",
-    "team_no": 17
+    ]
   },
   {
     "id": 28,
+    "team_no": 18,
     "reg_id": "REG-0028",
     "team_name": "StellarX",
+    "token": "e10e6558e3",
     "leader_name": "Krish Patel",
     "leader_enrollment": "231040107044",
     "leader_phone": "7046917475",
@@ -1255,20 +1257,20 @@
         "phone": "8866127502",
         "email": "pavaraditya6@gmail.com"
       }
-    ],
-    "token": "e10e6558e3",
-    "team_no": 18
+    ]
   },
   {
     "id": 29,
+    "team_no": 19,
     "reg_id": "REG-0029",
     "team_name": "Slidenova",
+    "token": "6190e09cd3",
     "leader_name": "PRAJAPATI PRIYANSHI HASHIMUKH BHAI",
     "leader_enrollment": "251040107054",
     "leader_phone": "9106524342",
     "leader_email": "prajapatipriyanshi022@gmail.com",
     "psid": "26219",
-    "ps_title": "SmartPresenter One \u2013 AI-Powered Portable Laptop-Free Presentation & Classroom Interaction System",
+    "ps_title": "SmartPresenter One – AI-Powered Portable Laptop-Free Presentation & Classroom Interaction System",
     "theme": "Smart Automation",
     "category": "Hardware",
     "total_members": 6,
@@ -1327,14 +1329,14 @@
         "phone": "9376347795",
         "email": "dakshvpatel7210@gmail.com"
       }
-    ],
-    "token": "6190e09cd3",
-    "team_no": 19
+    ]
   },
   {
     "id": 30,
+    "team_no": 20,
     "reg_id": "REG-0030",
     "team_name": "CtrlAltElite",
+    "token": "c3a3875c08",
     "leader_name": "KADIA TRUSHA KAUSHIK",
     "leader_enrollment": "241040107014",
     "leader_phone": "9428281224",
@@ -1399,14 +1401,14 @@
         "phone": "9265488133",
         "email": "barotjainam59@gmail.com"
       }
-    ],
-    "token": "c3a3875c08",
-    "team_no": 20
+    ]
   },
   {
     "id": 31,
+    "team_no": 21,
     "reg_id": "REG-0031",
     "team_name": "TrackX",
+    "token": "5d5cd5b459",
     "leader_name": "VRAJ ISHVARBHAI CHAUDHARY",
     "leader_enrollment": "251040107014",
     "leader_phone": "7600461225",
@@ -1471,14 +1473,14 @@
         "phone": "6356750696",
         "email": "chaudharykavya1308@gmail.com"
       }
-    ],
-    "token": "5d5cd5b459",
-    "team_no": 21
+    ]
   },
   {
     "id": 32,
+    "team_no": 22,
     "reg_id": "REG-0032",
     "team_name": "The Orbit Eye",
+    "token": "ae73467dbe",
     "leader_name": "Thakor Harshil",
     "leader_enrollment": "251040109003",
     "leader_phone": "9909055290",
@@ -1543,14 +1545,14 @@
         "phone": "9319069954",
         "email": "dasunsubodha25funi@gmail.com"
       }
-    ],
-    "token": "ae73467dbe",
-    "team_no": 22
+    ]
   },
   {
     "id": 33,
+    "team_no": 23,
     "reg_id": "REG-0033",
     "team_name": "Civilanz",
+    "token": "71b79536ee",
     "leader_name": "Rahilkhan Pathan",
     "leader_enrollment": "241043106007",
     "leader_phone": "9427169139",
@@ -1615,14 +1617,14 @@
         "phone": "+91 8200268223",
         "email": "gaurichaudhary2105@gmail.com"
       }
-    ],
-    "token": "71b79536ee",
-    "team_no": 23
+    ]
   },
   {
     "id": 34,
+    "team_no": 24,
     "reg_id": "REG-0034",
     "team_name": "Cool Can",
+    "token": "5ea1d92078",
     "leader_name": "Aayushi Manishkumar Melana",
     "leader_enrollment": "076",
     "leader_phone": "7990526771",
@@ -1687,14 +1689,14 @@
         "phone": "9408384411",
         "email": "dhwanitkansara06@gmail.com"
       }
-    ],
-    "token": "5ea1d92078",
-    "team_no": 24
+    ]
   },
   {
     "id": 35,
+    "team_no": 25,
     "reg_id": "REG-0035",
     "team_name": "INFRA NOVA",
+    "token": "aff0ef1528",
     "leader_name": "Yug Jayeshkumar Prajapati",
     "leader_enrollment": "050",
     "leader_phone": "7383095915",
@@ -1759,14 +1761,14 @@
         "phone": "8849286396",
         "email": "shrimaliprachi184@gmail.com"
       }
-    ],
-    "token": "aff0ef1528",
-    "team_no": 25
+    ]
   },
   {
     "id": 36,
+    "team_no": 26,
     "reg_id": "REG-0036",
     "team_name": "ONE STEP AHEAD",
+    "token": "6a57ab3f55",
     "leader_name": "Authoy Dey",
     "leader_enrollment": "251040106013",
     "leader_phone": "+917043741537",
@@ -1831,14 +1833,14 @@
         "phone": "+919664620968",
         "email": "shill.sudipa@gmail.com"
       }
-    ],
-    "token": "6a57ab3f55",
-    "team_no": 26
+    ]
   },
   {
     "id": 37,
+    "team_no": 27,
     "reg_id": "REG-0037",
     "team_name": "Hydro Nova",
+    "token": "b580b80d19",
     "leader_name": "khushi Fulkeshkumar patel",
     "leader_enrollment": "027",
     "leader_phone": "9213695499",
@@ -1903,20 +1905,20 @@
         "phone": "8160789644",
         "email": "chaudharidhairy016@gmail.com"
       }
-    ],
-    "token": "b580b80d19",
-    "team_no": 27
+    ]
   },
   {
     "id": 38,
+    "team_no": 28,
     "reg_id": "REG-0038",
     "team_name": "Traffic Nova",
+    "token": "658e043778",
     "leader_name": "Saniya Patel",
     "leader_enrollment": "040",
     "leader_phone": "9725742147",
     "leader_email": "patsonu0106@gmail.com",
     "psid": "26222",
-    "ps_title": "Student Innovation-Submit your ideas to address the growing pressures on the city\u2019s resources, transport networks, and logistic infrastructure",
+    "ps_title": "Student Innovation-Submit your ideas to address the growing pressures on the city’s resources, transport networks, and logistic infrastructure",
     "theme": "Transportation & Logistics",
     "category": "Software",
     "total_members": 6,
@@ -1975,14 +1977,14 @@
         "phone": "9998117028",
         "email": "mayankpfb@gmail.com"
       }
-    ],
-    "token": "658e043778",
-    "team_no": 28
+    ]
   },
   {
     "id": 39,
+    "team_no": 29,
     "reg_id": "REG-0039",
     "team_name": "Scrap setu",
+    "token": "75d7e3650b",
     "leader_name": "Nishita Mishra",
     "leader_enrollment": "26087",
     "leader_phone": "9428172219",
@@ -2047,14 +2049,14 @@
         "phone": "7052268296",
         "email": "krishy0308@gmail.com"
       }
-    ],
-    "token": "75d7e3650b",
-    "team_no": 29
+    ]
   },
   {
     "id": 40,
+    "team_no": 30,
     "reg_id": "REG-0040",
     "team_name": "Revault",
+    "token": "dcae20f6aa",
     "leader_name": "Hussain Gandhi",
     "leader_enrollment": "50",
     "leader_phone": "7698733453",
@@ -2119,8 +2121,6 @@
         "phone": "9725766574",
         "email": "dhruvchauhan578@gmail.com"
       }
-    ],
-    "token": "dcae20f6aa",
-    "team_no": 30
+    ]
   }
 ]
